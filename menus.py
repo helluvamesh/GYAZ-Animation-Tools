@@ -149,6 +149,7 @@ class Me_GYAZ_WeightTools (Menu):
         lay.operator ('object.vertex_group_levels', text='Levels')
         lay.operator ('object.vertex_group_smooth', text='Smooth')
         lay.operator ('object.vertex_group_mirror', text='Mirror')
+        lay.operator ('paint.weight_from_bones').type = 'AUTOMATIC'
         lay.separator ()
         lay.operator ('paint.weight_gradient', text='Radial Gradient').type='RADIAL'
         lay.operator ('paint.weight_gradient', text='Linear Gradient').type='LINEAR'
@@ -180,8 +181,7 @@ class Me_GYAZ_WeightTools (Menu):
         lay.operator ('object.vertex_group_quantize', text='Quantize')
         lay.operator ('object.vertex_group_fix', text='Fix Deforms')
         lay.separator ()
-        lay.operator ('paint.weight_set', text='Set Weight')
-        
+        lay.operator ('paint.weight_set', text='Set Weight')      
 
 
         
