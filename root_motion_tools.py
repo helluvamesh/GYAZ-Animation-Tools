@@ -49,6 +49,7 @@ from bpy.types import Panel, Operator, Menu
 from bpy.props import StringProperty, IntProperty, FloatProperty, EnumProperty, BoolProperty
 import os
 from .utils import lerp
+from .utils import report
 
 
 #check for drive bone and animation data
@@ -494,12 +495,9 @@ class Op_GYAZ_ExtractRootMotion_Base (bpy.types.Operator):
 
 
             #CLEAN UP
-            rotator.user_clear ()
-            orient_target.user_clear ()
-            orig_rotation.user_clear ()
-            bpy.data.objects.remove (rotator)
-            bpy.data.objects.remove (orient_target)
-            bpy.data.objects.remove (orig_rotation)
+            bpy.data.objects.remove (rotator, do_unlink=True)
+            bpy.data.objects.remove (orient_target, do_unlink=True)
+            bpy.data.objects.remove (orig_rotation, do_unlink=True)
 
         
         #checks
@@ -702,8 +700,7 @@ class Op_GYAZ_ExtractRootMotion_locZ (bpy.types.Operator):
                     
                 #clean up
                 #delete empty31
-                scene.objects.unlink(empty31)
-                bpy.data.objects.remove(empty31)
+                bpy.data.objects.remove(empty31, do_unlink=True)
 
                 bpy.ops.object.mode_set(mode = 'OBJECT')
             
@@ -909,13 +906,11 @@ class Op_GYAZ_ExtractRootMotion_locZ (bpy.types.Operator):
                     
                 #clean up
                 #delete empty21
-                empty21.user_clear ()
-                bpy.data.objects.remove(empty21)
+                bpy.data.objects.remove(empty21, do_unlink=True)
                 
                 l = [toe_loc1, toe_loc2, toe_loc3, toe_loc4]
                 for i in l:
-                    bpy.data.objects[i.name].user_clear ()
-                    bpy.data.objects.remove (bpy.data.objects[i.name])
+                    bpy.data.objects.remove (bpy.data.objects[i.name], do_unlink=True)
                     
                 bpy.ops.object.mode_set(mode = 'OBJECT')
 
@@ -1257,8 +1252,7 @@ class Op_GYAZ_ExtractRootMotion_ManualBake (bpy.types.Operator):
         
         for empty in empties:
             if bpy.data.objects.get(empty) is not None:
-                scene.objects[empty].user_clear ()
-                bpy.data.objects.remove(bpy.data.objects[empty])
+                bpy.data.objects.remove(bpy.data.objects[empty], do_unlink=True)
                 
         del root['ExtractRootMotion_manual_mode']
         del root['ExtractRootMotion_manual_empty1']
@@ -1313,8 +1307,7 @@ class Op_GYAZ_ExtractRootMotion_ManualCancel (bpy.types.Operator):
                 
             for empty in empties:
                 if bpy.data.objects.get(empty) is not None:
-                    scene.objects[empty].user_clear ()
-                    bpy.data.objects.remove (bpy.data.objects[empty])
+                    bpy.data.objects.remove (bpy.data.objects[empty], do_unlink=True)
                     
             #delete driveBone constraint
             cs = root.pose.bones[driveBone_name].constraints
@@ -1379,7 +1372,12 @@ class Op_GYAZ_ExtractRootMotion_DeleteRootAnim (bpy.types.Operator):
         if obj.animation_data is not None and
             obj.animation_data.action is not None
         else "")
-
+        
+        if action_name == "":
+            popup (["Armature has no animation."], "ERROR")
+            
+            return {'FINISHED'}
+        
         #delete object animation (not bones) and scale keys
         action = bpy.data.actions[action_name]
         fcurves = action.fcurves
@@ -1507,7 +1505,7 @@ class Op_GYAZ_ExtractRootMotion_CopyToBone (bpy.types.Operator):
                             
                 #delete empty (root_info)
                 root_info.user_clear ()
-                bpy.data.objects.remove (root_info)
+                bpy.data.objects.remove (root_info, do_unlink=True)
 
                
         #check for drive bone                
