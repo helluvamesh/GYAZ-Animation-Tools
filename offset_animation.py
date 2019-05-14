@@ -26,9 +26,21 @@ from bpy.props import *
 import os
 import mathutils
 from mathutils import Vector, Quaternion
+from .utils import report
+from .utils import popup
+from .utils import lerp
+from .utils import smooth_lerp
+from .utils import ease_in_lerp
+from .utils import ease_out_lerp
+from .utils import signed_angle
+from .utils import get_pole_angle
+from .utils import set_end_mode
+from .utils import area_of_type
+from .utils import areas_of_type
+from .utils import set_properties_context 
+from .utils import list_to_visual_list
 
-def report (self, item, error_or_info):
-    self.report({error_or_info}, item)
+
 
 def check (self):
     good_to_go = False
@@ -42,98 +54,6 @@ def check (self):
     
     return good_to_go
 
-#lerp
-def lerp(A, B, alpha):
-    x = A*(1-alpha)+B*alpha
-    return x
-
-#smooth lerp
-def smooth_lerp (A, B, alpha, strength):
-    #default strength = 2
-    if alpha <= 0.5:      
-        alpha = (alpha * 2) ** strength / 2
-    else:
-        alpha = 1 - ((1 - alpha) * 2) ** strength / 2
-        
-    x = A*(1-alpha)+B*alpha 
-    
-    return x
-
-
-#ease in lerp
-def ease_in_lerp (A, B, alpha, strength):
-    
-    alpha **= strength
-    x = A*(1-alpha)+B*alpha  
-    
-    return x
-
-#ease out lerp
-#ease in lerp
-def ease_out_lerp (A, B, alpha, strength):
-    
-    alpha **= 1/strength
-    x = A*(1-alpha)+B*alpha  
-    
-    return x    
-
-#popup
-def popup (text, icon, title):
-    def draw(self, context):
-        self.layout.label(text)
-    bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
-    
-# calc pole angle
-def signed_angle (vector_u, vector_v, normal):
-    #normal specifies orientation
-    angle = vector_u.angle(vector_v)
-    if vector_u.cross(vector_v).angle(normal) < 1:
-        angle = -angle
-    return angle
-
-def get_pole_angle (base_bone, constraint_bone, pole_bone):
-    pole_location = pole_bone.head
-    pole_normal = (constraint_bone.tail - base_bone.head).cross(pole_location - base_bone.head)
-    projected_pole_axis = pole_normal.cross(base_bone.tail - base_bone.head)
-    return signed_angle(base_bone.x_axis, projected_pole_axis, base_bone.tail - base_bone.head)
-
-def set_end_mode (start_mode):
-    if 'EDIT' in start_mode:
-        end_mode = 'EDIT'
-    elif start_mode == 'PAINT_TEXTURE':
-        end_mode = 'TEXTURE_PAINT'
-    elif start_mode == 'PAINT_VERTEX':
-        end_mode = 'VERTEX_PAINT'
-    elif start_mode == 'PAINT_WEIGHT':
-        end_mode = 'WEIGHT_PAINT'                    
-    else:
-        end_mode = start_mode
-    bpy.ops.object.mode_set (mode=end_mode)
-
-def area_of_type (type_name):
-    for area in bpy.context.screen.areas:
-        if area.type == type_name:
-            return area
-        
-def areas_of_type (type_name):
-    areas = []
-    for area in bpy.context.screen.areas:
-        if area.type == type_name:
-            areas.append (area)
-    return areas
-
-def set_properties_context (data):
-    prop_editors = areas_of_type ('PROPERTIES')
-    for e in prop_editors:
-        e.spaces[0].context = data
-        
-def list_to_visual_list (list):
-    line = ''
-    for index, item in enumerate(list):
-        if index > 0:
-            line += ', '
-        line += str(item)
-    return line
 
 #OPERATORS
 
@@ -145,7 +65,7 @@ class Op_GYAZ_OffsetAnim (bpy.types.Operator):
     bl_description = "Offset anim of selected bones. Global: from start to end of timeline, Local: between two markers, Local 2: between two markers with a user defined falloff curve, Local 4: marker1-2: falloff, m2-3: constant, m3-4: falloff" #For best results with smooth falloff you should sample the fcurves but you do not have to do so, though in that case you are responsible for having enough keyframes.
     
     #properties
-    Mode = EnumProperty(
+    Mode: EnumProperty(
         items=(
             ('GLOBAL', "GLOBAL", ""),
             ('SIMPLE_LOCAL', "SIMPLE LOCAL", ""),
@@ -631,7 +551,7 @@ class Op_GYAZ_SetupIKConstraint_GetActiveBone (bpy.types.Operator):
     bl_label = "Set Active Bone As"
     bl_description = "Set active pose bone (in pose mode)"
     
-    prop_name = StringProperty (name='Prop Name', default='base_bone')
+    prop_name: StringProperty (name='Prop Name', default='base_bone')
     
     #operator function
     def execute(self, context):      
@@ -740,12 +660,75 @@ class Op_GYAZ_SetupIKConstraint (bpy.types.Operator):
     
 #UI 
 
-#Tools    
-class UI_GYAZ_OffsetAnimation (Panel):
+#Tools
+class PG_GYAZ_SetPoleAngle (PropertyGroup):
+    base_bone: StringProperty (name='Base Bone', default='', description='E.g.: upperarm, thigh')
+    constraint_bone: StringProperty (name='Constraint Bone', default='', description='E.g.: forearm, shin')
+    ik_bone: StringProperty (name='IK Target Bone', default='', description='E.g.: ik_hand, ik_foot')
+    pole_bone: StringProperty (name='Pole Target Bone', default='', description='E.g.: target_elbow, target_knee')
+    
+    
+class DATA_PT_GYAZ_SetPoleAngle (Panel):
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = 'data'
+    bl_label = 'Setup IK Constraint'  
+    
+    #add ui elements here
+    def draw (self, context):
+        lay = self.layout
+        rig = bpy.context.object.data
+        scene = bpy.context.scene
+        owner = scene.gyaz_set_pole_angle
+        row = lay.row (align=True)
+        row.prop_search (owner, 'base_bone', rig, 'bones')
+        row.operator (Op_GYAZ_SetupIKConstraint_GetActiveBone.bl_idname, text='', icon='EYEDROPPER').prop_name='base_bone'
+        row = lay.row (align=True)
+        row.prop_search (owner, 'constraint_bone', rig, 'bones')
+        row.operator (Op_GYAZ_SetupIKConstraint_GetActiveBone.bl_idname, text='', icon='EYEDROPPER').prop_name='constraint_bone'
+        row = lay.row (align=True)
+        row.prop_search (owner, 'ik_bone', rig, 'bones')
+        row.operator (Op_GYAZ_SetupIKConstraint_GetActiveBone.bl_idname, text='', icon='EYEDROPPER').prop_name='ik_bone'
+        row = lay.row (align=True)
+        row.prop_search (owner, 'pole_bone', rig, 'bones')
+        row.operator (Op_GYAZ_SetupIKConstraint_GetActiveBone.bl_idname, text='', icon='EYEDROPPER').prop_name='pole_bone'
+        lay.operator (Op_GYAZ_SetupIKConstraint.bl_idname)
+         
+    #when the buttons should show up    
+    @classmethod
+    def poll(cls, context):
+        obj = bpy.context.object
+        return obj is not None and (context.mode == 'OBJECT' or context.mode == 'POSE') and context.armature
+    
+    
+class VIEW3D_MT_GYAZ_OffsetAnimation (Menu):
+    bl_label = 'Offset Animation'
+    
+    def draw (self, context):
+        lay = self.layout
+        scene = context.scene
+        wm = context.window_manager
+        lay.operator_context = 'INVOKE_REGION_WIN'
+        lay.operator (Op_GYAZ_OffsetAnim.bl_idname, text='Global').Mode='GLOBAL'
+        lay.operator (Op_GYAZ_OffsetAnim.bl_idname, text='Local').Mode='SIMPLE_LOCAL'
+        lay.separator ()
+        lay.operator (Op_GYAZ_OffsetAnim.bl_idname, text='Local 2').Mode='LOCAL_2'
+        lay.operator (Op_GYAZ_OffsetAnim.bl_idname, text='Local 4').Mode='LOCAL_4'
+        lay.separator ()
+        lay.props_enum (scene, 'GYAZ_OffsetAnimFalloff')
+        lay.separator ()
+        if scene.GYAZ_OffsetAnimFalloff != 'LINEAR':
+            lay.prop (scene, 'GYAZ_OffsetAnimFalloffStrength_1', text='Strength')
+            lay.separator ()
+        lay.operator ('anim.gyaz_sample_fcurves')
+        lay.operator ('anim.gyaz_delete_timeline_markers', text='Delete Markers')
+        
+
+class VIEW3D_PT_GYAZ_OffsetAnimation (Panel):
     bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
     bl_label = 'Offset Animaion'
-    bl_category = 'Tools'
+    bl_category = 'AnimTools'
     
     #add ui elements here
     def draw (self, context):
@@ -779,71 +762,6 @@ class UI_GYAZ_OffsetAnimation (Panel):
     def poll(cls, context):
         obj = bpy.context.object
         return bpy.context.mode == 'POSE' and obj != None or bpy.context.mode == 'OBJECT' and obj != None
-
-
-class PG_GYAZ_SetPoleAngle (PropertyGroup):
-    base_bone = StringProperty (name='Base Bone', default='', description='E.g.: upperarm, thigh')
-    constraint_bone = StringProperty (name='Constraint Bone', default='', description='E.g.: forearm, shin')
-    ik_bone = StringProperty (name='IK Target Bone', default='', description='E.g.: ik_hand, ik_foot')
-    pole_bone = StringProperty (name='Pole Target Bone', default='', description='E.g.: target_elbow, target_knee')
-    
-    
-class Pa_GYAZ_SetPoleAngle (Panel):
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context = 'data'
-    bl_label = 'Setup IK Constraint'  
-    
-    #add ui elements here
-    def draw (self, context):
-        lay = self.layout
-        rig = bpy.context.object.data
-        scene = bpy.context.scene
-        owner = scene.gyaz_set_pole_angle
-        row = lay.row (align=True)
-        row.prop_search (owner, 'base_bone', rig, 'bones')
-        row.operator (Op_GYAZ_SetupIKConstraint_GetActiveBone.bl_idname, text='', icon='EYEDROPPER').prop_name='base_bone'
-        row = lay.row (align=True)
-        row.prop_search (owner, 'constraint_bone', rig, 'bones')
-        row.operator (Op_GYAZ_SetupIKConstraint_GetActiveBone.bl_idname, text='', icon='EYEDROPPER').prop_name='constraint_bone'
-        row = lay.row (align=True)
-        row.prop_search (owner, 'ik_bone', rig, 'bones')
-        row.operator (Op_GYAZ_SetupIKConstraint_GetActiveBone.bl_idname, text='', icon='EYEDROPPER').prop_name='ik_bone'
-        row = lay.row (align=True)
-        row.prop_search (owner, 'pole_bone', rig, 'bones')
-        row.operator (Op_GYAZ_SetupIKConstraint_GetActiveBone.bl_idname, text='', icon='EYEDROPPER').prop_name='pole_bone'
-        lay.operator (Op_GYAZ_SetupIKConstraint.bl_idname)
-        
-        
-                
-    #when the buttons should show up    
-    @classmethod
-    def poll(cls, context):
-        obj = bpy.context.object
-        return obj!= None and (context.object) and (context.armature)
-    
-    
-class Me_GYAZ_OffsetAnimation (Menu):
-    bl_label = 'Offset Animation'
-    
-    def draw (self, context):
-        lay = self.layout
-        scene = context.scene
-        wm = context.window_manager
-        lay.operator_context = 'INVOKE_REGION_WIN'
-        lay.operator (Op_GYAZ_OffsetAnim.bl_idname, text='Global').Mode='GLOBAL'
-        lay.operator (Op_GYAZ_OffsetAnim.bl_idname, text='Local').Mode='SIMPLE_LOCAL'
-        lay.separator ()
-        lay.operator (Op_GYAZ_OffsetAnim.bl_idname, text='Local 2').Mode='LOCAL_2'
-        lay.operator (Op_GYAZ_OffsetAnim.bl_idname, text='Local 4').Mode='LOCAL_4'
-        lay.separator ()
-        lay.props_enum (scene, 'GYAZ_OffsetAnimFalloff')
-        lay.separator ()
-        if scene.GYAZ_OffsetAnimFalloff != 'LINEAR':
-            lay.prop (scene, 'GYAZ_OffsetAnimFalloffStrength_1', text='Strength')
-            lay.separator ()
-        lay.operator ('anim.gyaz_sample_fcurves')
-        lay.operator ('anim.gyaz_delete_timeline_markers', text='Delete Markers')
         
     
 #######################################################
@@ -870,13 +788,6 @@ def register():
         min = 0,
         name = 'Fall Off Strength 1',
         description = 'Strength of falloff curve. Ignored when Falloff is Linear')
-
-#    Scene.GYAZ_OffsetAnimFalloffStrength_2 = IntProperty(
-#        default = 0,
-#        min = 0,
-#        max = 999,
-#        name = 'Fall Off Strength 2',
-#        description = 'Strength of falloff curve: fine control (0-999). Ignored when Falloff is Linear')
     
     # set pole angle    
     bpy.utils.register_class (PG_GYAZ_SetPoleAngle)
@@ -888,10 +799,10 @@ def register():
     bpy.utils.register_class (Op_GYAZ_DeleteTimelineMarkers)
     bpy.utils.register_class (Op_GYAZ_SetupIKConstraint)
     bpy.utils.register_class (Op_GYAZ_SetupIKConstraint_GetActiveBone)
-    
-    bpy.utils.register_class (UI_GYAZ_OffsetAnimation)    
-    bpy.utils.register_class (Pa_GYAZ_SetPoleAngle)    
-    bpy.utils.register_class (Me_GYAZ_OffsetAnimation) 
+       
+    bpy.utils.register_class (DATA_PT_GYAZ_SetPoleAngle)    
+    bpy.utils.register_class (VIEW3D_MT_GYAZ_OffsetAnimation) 
+    bpy.utils.register_class (VIEW3D_PT_GYAZ_OffsetAnimation) 
 
 def unregister ():
     
@@ -902,15 +813,14 @@ def unregister ():
     bpy.utils.unregister_class (Op_GYAZ_SetupIKConstraint)
     bpy.utils.unregister_class (Op_GYAZ_SetupIKConstraint_GetActiveBone)
     
-    bpy.utils.unregister_class (UI_GYAZ_OffsetAnimation)
-    bpy.utils.unregister_class (Pa_GYAZ_SetPoleAngle)
-    bpy.utils.unregister_class (Me_GYAZ_OffsetAnimation)
+    bpy.utils.unregister_class (DATA_PT_GYAZ_SetPoleAngle)
+    bpy.utils.unregister_class (VIEW3D_MT_GYAZ_OffsetAnimation)
+    bpy.utils.unregister_class (VIEW3D_PT_GYAZ_OffsetAnimation)
 
 
     # props
     del Scene.GYAZ_OffsetAnimFalloff
     del Scene.GYAZ_OffsetAnimFalloffStrength_1
-#    del Scene.GYAZ_OffsetAnimFalloffStrength_2
     
     # set pole angle
     del Scene.gyaz_set_pole_angle     

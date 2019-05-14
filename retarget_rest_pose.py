@@ -23,8 +23,12 @@
 import bpy
 from bpy.types import Operator, Panel
 from bpy.props import *
+from .utils import report
+from .utils import popup
+from .utils import list_to_visual_list
 
-prefs = bpy.context.user_preferences.addons[__package__].preferences
+
+prefs = bpy.context.preferences.addons[__package__].preferences
 
 class Op_GYAZ_RetargetRestPose (bpy.types.Operator):
        
@@ -32,12 +36,12 @@ class Op_GYAZ_RetargetRestPose (bpy.types.Operator):
     bl_label = "Anim: Retarget Rest Pose"
     bl_description = "Selected: armature with old rest pose and animation, active: armature with new rest pose and no animation"
     
-    location_bones = StringProperty (default=prefs.location_bones, name='Location Bones', description='E.g.: hips, some_other_bone')
-    halve_frame_rate = BoolProperty (default=prefs.halve_frame_rate, name='Halve Frame Rate')
-    override_frame_rate = IntProperty (default=prefs.override_frame_rate, name='Scene Frame Rate', description="Ignored if 'Halve Frame Rate' is False", min=1)
-    bake = BoolProperty (default=prefs.bake, name='Bake', description='Bake action to target rig')
-    use_target_bone_prefix = BoolProperty (default=prefs.use_target_bone_prefix, name='Use Target Bone Prefix')
-    target_bone_prefix = StringProperty (default=prefs.bone_prefix, name='Target Bone Prefix', description='target bone name = prefix + source bone name')
+    location_bones: StringProperty (default=prefs.location_bones, name='Location Bones', description='E.g.: hips, some_other_bone')
+    halve_frame_rate: BoolProperty (default=prefs.halve_frame_rate, name='Halve Frame Rate')
+    override_frame_rate: IntProperty (default=prefs.override_frame_rate, name='Scene Frame Rate', description="Ignored if 'Halve Frame Rate' is False", min=1)
+    bake: BoolProperty (default=prefs.bake, name='Bake', description='Bake action to target rig')
+    use_target_bone_prefix: BoolProperty (default=prefs.use_target_bone_prefix, name='Use Target Bone Prefix')
+    target_bone_prefix: StringProperty (default=prefs.bone_prefix, name='Target Bone Prefix', description='target bone name = prefix + source bone name')
     
     #popup with properties
     def invoke(self, context, event):
@@ -55,25 +59,6 @@ class Op_GYAZ_RetargetRestPose (bpy.types.Operator):
         bake = self.bake
 
         ###
-
-
-        def popup (item, icon):
-            def draw(self, context):
-                self.layout.label(item)
-            bpy.context.window_manager.popup_menu(draw, title="Warning", icon=icon)
-            print (item)
-            
-        def list_to_visual_list (list):
-            line = ''
-            for index, item in enumerate(list):
-                if index > 0:
-                    line += ', '
-                line += str(item)
-            return line
-        
-        #report
-        def report (self, item, error_or_info):
-            self.report({error_or_info}, item)
 
         scene = bpy.context.scene
         
@@ -134,8 +119,8 @@ class Op_GYAZ_RetargetRestPose (bpy.types.Operator):
                             # select target rig
                             bpy.ops.object.mode_set (mode='OBJECT')
                             bpy.ops.object.select_all (action='DESELECT')
-                            source_rig.select = True
-                            scene.objects.active = source_rig 
+                            source_rig.select_set (True)
+                            bpy.context.view_layer.objects.active = source_rig 
                                 
                             # save area
                             area = bpy.context.area.type
@@ -159,7 +144,7 @@ class Op_GYAZ_RetargetRestPose (bpy.types.Operator):
                                 bpy.context.space_data.mode = 'ACTION'
                                 scene.frame_set (first_frame)
                                 # rescale time by 0.5
-                                bpy.ops.transform.transform (mode='TIME_SCALE', value=(0.5, 0, 0, 0), axis=(0, 0, 0), constraint_axis=(True, False, False), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED')
+                                bpy.ops.transform.transform (mode='TIME_SCALE', value=(0.5, 0, 0, 0), constraint_axis=(True, False, False), orient_axis='X', orient_type='GLOBAL', mirror=False, use_proportional_edit=False)
                                 bpy.ops.action.clean (channels=True, threshold=0.001)
                                 
                                 # frame start, end
@@ -221,8 +206,8 @@ class Op_GYAZ_RetargetRestPose (bpy.types.Operator):
                             # select target rig
                             bpy.ops.object.mode_set (mode='OBJECT')
                             bpy.ops.object.select_all (action='DESELECT')
-                            rig.select = True
-                            scene.objects.active = rig
+                            rig.select_set (True)
+                            bpy.context.view_layer.objects.active = rig
                                 
                             # select relevant bones
                             bpy.ops.object.mode_set (mode='POSE')
@@ -235,32 +220,16 @@ class Op_GYAZ_RetargetRestPose (bpy.types.Operator):
                             # bake
                             if bake == True:
                                 bpy.ops.object.mode_set (mode='POSE')
-                                bpy.ops.nla.bake(frame_start=first_frame, frame_end=last_frame, only_selected=True, visual_keying=True, clear_constraints=False, clear_parents=False, use_current_action=False, bake_types={'POSE'})
-                        
+                                bpy.ops.nla.bake(frame_start=first_frame, frame_end=last_frame, only_selected=True, visual_keying=True, clear_constraints=True, clear_parents=False, use_current_action=False, bake_types={'POSE'})
+            
+            bpy.ops.object.mode_set (mode='OBJECT')
                                 
         else:
             report (self, "Select two armatures.", "WARNING")
             
                                               
-        return {'FINISHED'}     
+        return {'FINISHED'}
 
-#UI    
-
-def UI_GYAZ_RetargetRestPose (self, context):
-    ao = bpy.context.active_object       
-    if ao != None and ao.type == 'ARMATURE':
-        sel_objs = bpy.context.selected_objects    
-        lay = self.layout
-        lay.operator (Op_GYAZ_RetargetRestPose.bl_idname, text='Retarget Rest Pose')
-        
-def UI_GYAZ_RetargetRestPose_Menu (self, context):
-    ao = context.active_object       
-    if ao != None:
-        if ao.type == 'ARMATURE' and context.mode == 'OBJECT': 
-            lay = self.layout
-            lay.separator ()
-            lay.operator_context = 'INVOKE_REGION_WIN'
-            lay.operator (Op_GYAZ_RetargetRestPose.bl_idname, text='Retarget Rest Pose')
     
 #######################################################
 #######################################################
@@ -268,15 +237,11 @@ def UI_GYAZ_RetargetRestPose_Menu (self, context):
 #REGISTER
 
 def register():
-    bpy.utils.register_class (Op_GYAZ_RetargetRestPose)                                            
-    bpy.types.VIEW3D_PT_tools_animation.append (UI_GYAZ_RetargetRestPose)
-    bpy.types.Me_GYAZ_OffsetAnimation.append (UI_GYAZ_RetargetRestPose_Menu)
-                 
+    bpy.utils.register_class (Op_GYAZ_RetargetRestPose)                                                       
    
 
 def unregister ():
     bpy.utils.unregister_class (Op_GYAZ_RetargetRestPose)
-    bpy.types.VIEW3D_PT_tools_animation.remove (UI_GYAZ_RetargetRestPose)
 
   
 if __name__ == "__main__":   

@@ -19,8 +19,8 @@
 bl_info = {   
  "name": "GYAZ Animation Tools",   
  "author": "Andras Gyalog",   
- "version": ('6'),   
- "blender": (2, 79, 0),   
+ "version": (2, 80, 0),   
+ "blender": (2, 80, 0),   
  "location": "",   
  "description": "Various animation tools",
  "warning": "",   
@@ -34,47 +34,65 @@ import bpy
 from bpy.types import Operator, AddonPreferences, PropertyGroup
 from bpy.props import *
 
+
 class GYAZ_AnimationTools_ShortcutItem (PropertyGroup):
-    km_name = StringProperty (default='')
-    kmi_idname = StringProperty (default='')
-    type = StringProperty (default='')
-    value = StringProperty (default='')
-    shift = BoolProperty (default=False)
-    ctrl = BoolProperty (default=False)
-    alt = BoolProperty (default=False)
-    prop = StringProperty (default='')
+    km_name: StringProperty (default='')
+    kmi_idname: StringProperty (default='')
+    type: StringProperty (default='')
+    value: StringProperty (default='')
+    shift: BoolProperty (default=False)
+    ctrl: BoolProperty (default=False)
+    alt: BoolProperty (default=False)
+    prop: StringProperty (default='')
+    
+
+def shortcut_activation(self, context):
+    prefs = bpy.context.preferences.addons[__package__].preferences
+    if prefs.shortcuts_active:
+        from .shortcuts import activate_shortcuts
+        activate_shortcuts()
+    else:
+        from .shortcuts import deactivate_shortcuts
+        deactivate_shortcuts() 
 
 
-class GYAZ_Animation_Tools_Preferences (AddonPreferences):
+class GYAZ_AnimationTools_Preferences (AddonPreferences):
     # this must match the addon name, use '__package__'
     # when defining this in a submodule of a python package.
     bl_idname = __package__
+    bl_label = 'Activate Addon Shortcuts'
+    bl_description = 'Warning! This also overwrites built-in animation menus'
     
-    addon_shortcuts = CollectionProperty (type=GYAZ_AnimationTools_ShortcutItem)
-    disabled_shortcuts = CollectionProperty (type=GYAZ_AnimationTools_ShortcutItem)
+    addon_shortcuts: CollectionProperty (type=GYAZ_AnimationTools_ShortcutItem)
+    disabled_shortcuts: CollectionProperty (type=GYAZ_AnimationTools_ShortcutItem)
+    
+    shortcuts_active: BoolProperty(name='Use Addon Shortcuts',
+                                   description="Warning! This also changes Blender's default animation menus",
+                                   update=shortcut_activation
+                                   )
          
     # ROOT MOTION TOOLS
-    root_bone = StringProperty(
+    root_bone: StringProperty(
             name="Root (Prefix not added)",
             default='root'
-            )     
-    bone_prefix = StringProperty(
+            )    
+    bone_prefix: StringProperty(
             name="Bone Prefix",
             default=''
             )
-    bone_left_suffix = StringProperty(
+    bone_left_suffix: StringProperty(
             name="Bone Left Suffix",
             default='_l'
             )
-    bone_right_suffix = StringProperty(
+    bone_right_suffix: StringProperty(
             name="Bone Right Suffix",
             default='_r'
             )          
-    drive_bone = StringProperty(
+    drive_bone: StringProperty(
             name="Drive Bone",
             default='hips'
             ) 
-    drive_bone_forward = EnumProperty(
+    drive_bone_forward: EnumProperty(
         items=(
             ('+X', "+X", ""),
             ('-X', "-X", ""),
@@ -87,81 +105,85 @@ class GYAZ_Animation_Tools_Preferences (AddonPreferences):
         name="Drive Bone Forward Axis",
         description="Drive bone's axis that points forward."
         )  
-    toes = StringProperty(
+    toes: StringProperty(
             name="toes",
             default='toes'
             )
     
     # RIG REDUCER           
     #preset names
-    preset_name_0 = StringProperty (default='-')
-    preset_name_1 = StringProperty (default='-')
-    preset_name_2 = StringProperty (default='-')
-    preset_name_3 = StringProperty (default='-')
-    preset_name_4 = StringProperty (default='-')
-    preset_name_5 = StringProperty (default='-')
-    preset_name_6 = StringProperty (default='-')
-    preset_name_7 = StringProperty (default='-')
-    preset_name_8 = StringProperty (default='-')
-    preset_name_9 = StringProperty (default='-')
-    preset_name_10 = StringProperty (default='-')
-    preset_name_11 = StringProperty (default='-')
-    preset_name_12 = StringProperty (default='-')
-    preset_name_13 = StringProperty (default='-')
-    preset_name_14 = StringProperty (default='-')
-    preset_name_15 = StringProperty (default='-')
-    preset_name_16 = StringProperty (default='-')
-    preset_name_17 = StringProperty (default='-')
-    preset_name_18 = StringProperty (default='-')
-    preset_name_19 = StringProperty (default='-')
+    preset_name_0: StringProperty (default='-')
+    preset_name_1: StringProperty (default='-')
+    preset_name_2: StringProperty (default='-')
+    preset_name_3: StringProperty (default='-')
+    preset_name_4: StringProperty (default='-')
+    preset_name_5: StringProperty (default='-')
+    preset_name_6: StringProperty (default='-')
+    preset_name_7: StringProperty (default='-')
+    preset_name_8: StringProperty (default='-')
+    preset_name_9: StringProperty (default='-')
+    preset_name_10: StringProperty (default='-')
+    preset_name_11: StringProperty (default='-')
+    preset_name_12: StringProperty (default='-')
+    preset_name_13: StringProperty (default='-')
+    preset_name_14: StringProperty (default='-')
+    preset_name_15: StringProperty (default='-')
+    preset_name_16: StringProperty (default='-')
+    preset_name_17: StringProperty (default='-')
+    preset_name_18: StringProperty (default='-')
+    preset_name_19: StringProperty (default='-')
     
     #presets
     class GYAZ_ReduceRig_PresetItem (PropertyGroup):
-        name = StringProperty (name='', description="'Bone to remove' / 'Vertex group to merge and remove'")
-        name_children_only = BoolProperty (name='', default=False, description="Children only: only look for children, leave this bone and vertex group alone")               
-        merge_to = StringProperty (name='', description="Vertex group to merge to. Leave it unset for just removing bone and vertex group")
+        name: StringProperty (name='', description="'Bone to remove' / 'Vertex group to merge and remove'")
+        name_children_only: BoolProperty (name='', default=False, description="Children only: only look for children, leave this bone and vertex group alone")               
+        merge_to: StringProperty (name='', description="Vertex group to merge to. Leave it unset for just removing bone and vertex group")
     bpy.utils.register_class (GYAZ_ReduceRig_PresetItem)
     
-    preset_0 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem)          
-    preset_1 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem)        
-    preset_2 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem)    
-    preset_3 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
-    preset_4 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
-    preset_5 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
-    preset_6 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
-    preset_7 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
-    preset_8 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
-    preset_9 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
-    preset_10 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
-    preset_11 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
-    preset_12 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
-    preset_13 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
-    preset_14 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
-    preset_15 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
-    preset_16 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
-    preset_17 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
-    preset_18 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
-    preset_19 = CollectionProperty(type=GYAZ_ReduceRig_PresetItem)
+    preset_0: CollectionProperty(type=GYAZ_ReduceRig_PresetItem)          
+    preset_1: CollectionProperty(type=GYAZ_ReduceRig_PresetItem)        
+    preset_2: CollectionProperty(type=GYAZ_ReduceRig_PresetItem)    
+    preset_3: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
+    preset_4: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
+    preset_5: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
+    preset_6: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
+    preset_7: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
+    preset_8: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
+    preset_9: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
+    preset_10: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
+    preset_11: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
+    preset_12: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
+    preset_13: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
+    preset_14: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
+    preset_15: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
+    preset_16: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
+    preset_17: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
+    preset_18: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
+    preset_19: CollectionProperty(type=GYAZ_ReduceRig_PresetItem)
     
     # RETARGET REST POSE
-    location_bones = StringProperty (default='hips', name='Location Bones', description='e.g.: hips, some_other_bone')
-    halve_frame_rate = BoolProperty (default=True, name='Halve Frame Rate')
-    override_frame_rate = IntProperty (default=30, name='Override Frame Rate', description="ignored if 'Halve Frame Rate' is False")
-    bake = BoolProperty (default=True, name='Bake', description='Bake action to target rig. Forced if Halve Frame Rate is True')
-    use_target_bone_prefix = BoolProperty (default=True, name='Use Target Bone Prefix')
+    location_bones: StringProperty (default='hips', name='Location Bones', description='e.g.: hips, some_other_bone')
+    halve_frame_rate: BoolProperty (default=True, name='Halve Frame Rate')
+    override_frame_rate: IntProperty (default=30, name='Override Frame Rate', description="ignored if 'Halve Frame Rate' is False")
+    bake: BoolProperty (default=True, name='Bake', description='Bake action to target rig. Forced if Halve Frame Rate is True')
+    use_target_bone_prefix: BoolProperty (default=True, name='Use Target Bone Prefix')
 
                           
     def draw(self, context):
         lay = self.layout
-        lay.label ('')
-        lay.label ("Offset Animation:")
-        lay.label ("Global or local smooth offset of multiple bones or active object.")
-        lay.label ("Location: View3d>Toolshelf>Tools>Offset Animation")
-        lay.label ('')
-        lay.label ('Extract Root Motion:')
-        lay.label ("From the 'drive bone' of a full fk skeleton and apply it to Armature Object or root bone. The drive bone is at top of hierarchy, e.g. pelvis or hips. All bones should inherit rotation.")
-        lay.label ("Location: 'View3d>Toolshelf>Tools>Extract Root Motion")
-        lay.label ("Bones:")
+        lay.label (text='')
+        lay.label (text="Offset Animation:")
+        lay.label (text="Global or local smooth offset of multiple bones or active object.")
+        lay.label (text="Modes: Object, Pose")
+        lay.label (text="Location: View3d>Properies(N)Panel>AnimTools>Offset Animation")
+        lay.label (text="Menu Shortcut: F")
+        lay.label (text='')
+        lay.label (text='Extract Root Motion:')
+        lay.label (text="From the 'drive bone' of a full fk skeleton and apply it to Armature Object or root bone. The drive bone is at top of hierarchy, e.g. pelvis or hips. All bones should inherit rotation.")
+        lay.label (text="Modes: Object")
+        lay.label (text="Location: View3d>Properies(N)Panel>AnimTools>Extract Root Motion")
+        lay.label (text="Menu Shortcut: Q")
+        lay.label (text="Bones:")
         lay.prop (self, "bone_prefix")
         lay.prop (self, "bone_left_suffix")
         lay.prop (self, "bone_right_suffix")
@@ -170,26 +192,30 @@ class GYAZ_Animation_Tools_Preferences (AddonPreferences):
         lay.prop (self, "toes")
         lay.prop (self, "root_bone")
         lay.label (text="All these bones should be on a visible bone layer.")
-        lay.label ('')
-        lay.label ("Rig Reducer:")
-        lay.label ("For creating Levels of Detail (LODs) of armatures and bone weights.")
-        lay.label ("Location: View3d>Toolshelf>Create (select an armature)")        
-        lay.label ('')
-        lay.label ("Retarget Rest Pose:")
-        lay.label ("Change the rest pose of an animation.")
-        lay.label ("Location: View3d>Toolshelf>Animation>Animation>Action>Retarget Rest Pose")
-        lay.label ("Settings:")
+        lay.label (text='')
+        lay.label (text="Rig Reducer:")
+        lay.label (text="For creating Levels of Detail (LODs) of armatures and bone weights.")
+        lay.label (text="Modes: Object, Pose")        
+        lay.label (text="Location: View3d>Properies(N)Panel>AnimTools>Reduce Rig")        
+        lay.label (text='')
+        lay.label (text="Retarget Rest Pose:")
+        lay.label (text="Change the rest pose of an animation.")
+        lay.label (text="Modes: Object")
+        lay.label (text="Location: View3d>Properies(N)Panel>AnimTools>Animation>Retarget Rest Pose")
+        lay.label (text="Settings:")
         lay.prop (self, 'location_bones')
         lay.prop (self, 'halve_frame_rate')
         row = lay.row ()
         row.prop (self, 'override_frame_rate')
-        row.label ('')
+        row.label (text='')
         lay.prop (self, 'bake')
         lay.prop (self, 'use_target_bone_prefix')
-        lay.label ('')
-        lay.label ('Setup IK Constraint:')
-        lay.label ('Location: Properties Editor > Data > Setup IK Constraint')
-        lay.label ('')
+        lay.label (text='')
+        lay.label (text='Setup IK Constraint:')
+        lay.label (text='Location: Properties Editor > Data > Setup IK Constraint')
+        lay.label (text='')
+        lay.prop (self, 'shortcuts_active')
+        lay.label (text='')
         
 #        debug rig riducer presets
 #        for item in self.preset_0:
@@ -201,11 +227,11 @@ class GYAZ_Animation_Tools_Preferences (AddonPreferences):
 # Registration
 def register():
     bpy.utils.register_class (GYAZ_AnimationTools_ShortcutItem)
-    bpy.utils.register_class (GYAZ_Animation_Tools_Preferences)
+    bpy.utils.register_class (GYAZ_AnimationTools_Preferences)
 
 
 def unregister():
-    bpy.utils.unregister_class (GYAZ_Animation_Tools_Preferences)
+    bpy.utils.unregister_class (GYAZ_AnimationTools_Preferences)
     bpy.utils.unregister_class (GYAZ_AnimationTools_ShortcutItem)
 
 

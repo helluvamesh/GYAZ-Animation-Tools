@@ -20,28 +20,21 @@
 ##########################################################################################################
 ##########################################################################################################
 
-
 import bpy
 from bpy.types import Panel, Operator
 from bpy.props import *
+from .utils import report
+from .utils import popup
 
-#popup
-def popup (item, icon):
-    def draw(self, context):
-        self.layout.label(item)
-    bpy.context.window_manager.popup_menu(draw, title="GYAZ Game Rigger", icon=icon)
-    
-def report (self, item, error_or_info):
-    self.report({error_or_info}, item)
 
-prefs = bpy.context.user_preferences.addons[__package__].preferences
+prefs = bpy.context.preferences.addons[__package__].preferences
 
 # props
 
 class GYAZ_ReduceRig_BoneItem (bpy.types.PropertyGroup):
-    name = StringProperty (name='', description="'Bone to remove' / 'Vertex group to merge and remove'")
-    name_children_only = BoolProperty (name='', default=False, description="Children only: only look for children, leave this bone and vertex group alone")
-    merge_to = StringProperty (name='', description="Vertex group to merge to. Leave it unset for just removing bone and vertex group")
+    name: StringProperty (name='', description="'Bone to remove' / 'Vertex group to merge and remove'")
+    name_children_only: BoolProperty (name='', default=False, description="Children only: only look for children, leave this bone and vertex group alone")
+    merge_to: StringProperty (name='', description="Vertex group to merge to. Leave it unset for just removing bone and vertex group")
   
 class GYAZ_ReduceRig_Props (bpy.types.PropertyGroup):
 
@@ -72,9 +65,9 @@ class GYAZ_ReduceRig_Props (bpy.types.PropertyGroup):
             scene_item.name_children_only = preset_item.name_children_only
             scene_item.merge_to = preset_item.merge_to
 
-    active_preset = EnumProperty (name='', items=get_preset_names, default=None, update=load_active_preset)
+    active_preset: EnumProperty (name='', items=get_preset_names, default=None, update=load_active_preset)
 
-    bones = CollectionProperty (type = GYAZ_ReduceRig_BoneItem)
+    bones: CollectionProperty (type = GYAZ_ReduceRig_BoneItem)
     
 
 class Op_GYAZ_ReduceRig_SavePreset (bpy.types.Operator):
@@ -83,7 +76,7 @@ class Op_GYAZ_ReduceRig_SavePreset (bpy.types.Operator):
     bl_label = "GYAZ Reduce Rig: Save Preset"
     bl_description = "Save preset"
     
-    ui_name = StringProperty (name = 'name', default = '')
+    ui_name: StringProperty (name = 'name', default = '')
     
     #popup with properties
     def invoke (self, context, event):
@@ -116,7 +109,7 @@ class Op_GYAZ_ReduceRig_SavePreset (bpy.types.Operator):
             setattr (prefs, 'preset_name_'+index_str, ui_name) 
             
             #save user preferences
-            bpy.context.area.type = 'USER_PREFERENCES'
+            bpy.context.area.type = 'PREFERENCES'
             bpy.ops.wm.save_userpref()
             bpy.context.area.type = 'VIEW_3D'      
 
@@ -148,7 +141,7 @@ class Op_GYAZ_ReduceRig_ClearPreset (bpy.types.Operator):
         prefs.property_unset ('preset_name_'+index_str)
         
         #save user preferences
-        bpy.context.area.type = 'USER_PREFERENCES'
+        bpy.context.area.type = 'PREFERENCES'
         bpy.ops.wm.save_userpref()
         bpy.context.area.type = 'VIEW_3D'      
 
@@ -162,7 +155,7 @@ class Op_GYAZ_ReduceRig_Functions (bpy.types.Operator):
     bl_label = "GYAZ Reduce Rig: Functions"
     bl_description = ""
     
-    ui_mode = EnumProperty(
+    ui_mode: EnumProperty(
         name = 'mode',
         items = (
             ('ADD', '', ''),
@@ -191,7 +184,7 @@ class Op_GYAZ_ReduceRig_RemoveItem (bpy.types.Operator):
     bl_label = "GYAZ Reduce Rig: Remove Item"
     bl_description = "Remove item"
     
-    ui_index = IntProperty (name='', default=0)
+    ui_index: IntProperty (name='', default=0)
     
     #operator function
     def execute(self, context):
@@ -209,7 +202,7 @@ class Op_GYAZ_ReduceRig_SetNameAsActiveBone (bpy.types.Operator):
     bl_label = "GYAZ Reduce Rig: Set Prop As Active Bone"
     bl_description = "Set active bone"
     
-    ui_index = IntProperty (name='', default=0)
+    ui_index: IntProperty (name='', default=0)
     
     #operator function
     def execute(self, context):
@@ -228,7 +221,7 @@ class Op_GYAZ_ReduceRig_SetMergeToAsActiveBone (bpy.types.Operator):
     bl_label = "GYAZ Reduce Rig: Set Merge To As Active Bone"
     bl_description = "Set active bone"
     
-    ui_index = IntProperty (name='', default=0)
+    ui_index: IntProperty (name='', default=0)
     
     #operator function
     def execute(self, context):
@@ -247,8 +240,8 @@ class Op_GYAZ_ReduceRig_MergeWeightsAndRemoveBones (bpy.types.Operator):
     bl_label = "GYAZ Reduce Rig: Merge Weights And Remove Bones"
     bl_description = ""
 
-    ui_remove_bones = BoolProperty (name='remove bones', default=True)    
-    ui_merge_weights = BoolProperty (name='merge weights', default=True)
+    ui_remove_bones: BoolProperty (name='remove bones', default=True)    
+    ui_merge_weights: BoolProperty (name='merge weights', default=True)
     
     def invoke(self, context, event):
         wm = context.window_manager
@@ -274,8 +267,8 @@ class Op_GYAZ_ReduceRig_MergeWeightsAndRemoveBones (bpy.types.Operator):
                     
                     bpy.ops.object.mode_set (mode='OBJECT')
                     bpy.ops.object.select_all (action='DESELECT')
-                    rig.select = True
-                    scene.objects.active = rig
+                    rig.select_set (True)
+                    bpy.context.view_layer.objects.active = rig
                     
                     #make list of descendants
                     bpy.ops.object.mode_set (mode='EDIT') 
@@ -388,8 +381,8 @@ class Op_GYAZ_ReduceRig_MergeWeightsAndRemoveBones (bpy.types.Operator):
                                 
                                     for mesh in meshes:
                                         bpy.ops.object.select_all (action='DESELECT')
-                                        mesh.select = True
-                                        scene.objects.active = mesh
+                                        mesh.select_set (True)
+                                        bpy.context.view_layer.objects.active = mesh
                                         #mix weights if mesh has those weights
                                         vgroups = mesh.vertex_groups
                                         if vgroups.get (weight_to_merge) != None:
@@ -404,12 +397,12 @@ class Op_GYAZ_ReduceRig_MergeWeightsAndRemoveBones (bpy.types.Operator):
                                             #delete surplus weights
                                             vgroups = mesh.vertex_groups
                                             vgroups.remove (vgroups[weight_to_merge])
-                                    
+            
             #finalize
             bpy.ops.object.mode_set (mode='OBJECT')
             bpy.ops.object.select_all (action='DESELECT')
-            rig.select = True
-            scene.objects.active = rig       
+            rig.select_set (True)
+            bpy.context.view_layer.objects.active = rig       
             
         return {'FINISHED'}
     
@@ -421,10 +414,10 @@ class Op_GYAZ_ReduceRig_MergeWeightsAndRemoveBones (bpy.types.Operator):
     
 #UI
 
-class UI_GYAZ_ReduceRig (Panel):
+class VIEW3D_PT_GYAZ_ReduceRig (Panel):
     bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
-    bl_category = 'Create'
+    bl_region_type = 'UI'
+    bl_category = 'AnimTools'
     bl_label = 'Reduce Rig'    
     
     #add ui elements here
@@ -434,12 +427,12 @@ class UI_GYAZ_ReduceRig (Panel):
         lay.label (text='Presets:')
         row = lay.row (align=True)
         row.prop (scene.gyaz_reduce_rig, "active_preset", text='')
-        row.operator (Op_GYAZ_ReduceRig_SavePreset.bl_idname, text='', icon='ZOOMIN')
-        row.operator (Op_GYAZ_ReduceRig_ClearPreset.bl_idname, text='', icon='ZOOMOUT')
+        row.operator (Op_GYAZ_ReduceRig_SavePreset.bl_idname, text='', icon='ADD')
+        row.operator (Op_GYAZ_ReduceRig_ClearPreset.bl_idname, text='', icon='REMOVE')
         lay.label (text='Remove Bones:')
         row = lay.row (align=True)
         row.scale_x = 2
-        row.operator (Op_GYAZ_ReduceRig_Functions.bl_idname, text='', icon='ZOOMIN').ui_mode = 'ADD'
+        row.operator (Op_GYAZ_ReduceRig_Functions.bl_idname, text='', icon='ADD').ui_mode = 'ADD'
         row.operator (Op_GYAZ_ReduceRig_Functions.bl_idname, text='', icon='X').ui_mode = 'REMOVE_ALL'
         col = lay.column (align=True)
         for index, name in enumerate(scene.gyaz_reduce_rig.bones):
@@ -453,7 +446,7 @@ class UI_GYAZ_ReduceRig (Panel):
             row.prop_search(scene.gyaz_reduce_rig.bones[index], "merge_to", bpy.context.active_object.data, "bones", icon='FULLSCREEN_EXIT')
             row.operator (Op_GYAZ_ReduceRig_SetMergeToAsActiveBone.bl_idname, text='', icon='EYEDROPPER').ui_index = index
             row.separator ()
-            row.operator (Op_GYAZ_ReduceRig_RemoveItem.bl_idname, text='', icon='ZOOMOUT').ui_index = index
+            row.operator (Op_GYAZ_ReduceRig_RemoveItem.bl_idname, text='', icon='REMOVE').ui_index = index
         lay.operator (Op_GYAZ_ReduceRig_MergeWeightsAndRemoveBones.bl_idname, text='Remove Bones and Merge Weights')
 
 
@@ -489,7 +482,7 @@ def register():
     bpy.utils.register_class (Op_GYAZ_ReduceRig_SetNameAsActiveBone)  
     bpy.utils.register_class (Op_GYAZ_ReduceRig_SetMergeToAsActiveBone)  
     bpy.utils.register_class (Op_GYAZ_ReduceRig_MergeWeightsAndRemoveBones)   
-    bpy.utils.register_class (UI_GYAZ_ReduceRig)  
+    bpy.utils.register_class (VIEW3D_PT_GYAZ_ReduceRig)  
    
 
 def unregister ():
@@ -507,7 +500,7 @@ def unregister ():
     bpy.utils.unregister_class (Op_GYAZ_ReduceRig_SetNameAsActiveBone)
     bpy.utils.unregister_class (Op_GYAZ_ReduceRig_SetMergeToAsActiveBone)
     bpy.utils.unregister_class (Op_GYAZ_ReduceRig_MergeWeightsAndRemoveBones)
-    bpy.utils.unregister_class (UI_GYAZ_ReduceRig)
+    bpy.utils.unregister_class (VIEW3D_PT_GYAZ_ReduceRig)
 
   
 if __name__ == "__main__":   

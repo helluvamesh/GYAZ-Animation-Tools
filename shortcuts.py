@@ -22,7 +22,7 @@
 
 import bpy
 
-prefs = bpy.context.user_preferences.addons[__package__].preferences
+prefs = bpy.context.preferences.addons[__package__].preferences
 addon_shortcuts = prefs.addon_shortcuts
 disabled_shortcuts = prefs.disabled_shortcuts
 
@@ -35,7 +35,7 @@ def save_dis_shortcut (km, kmi):
     i.km_name, i.kmi_idname, i.type, i.value, i.shift, i.ctrl, i.alt, i.prop = km.name, kmi.idname, kmi.type, kmi.value, kmi.shift, kmi.ctrl, kmi.alt, kmi.properties.name if hasattr (kmi.properties, 'name') else ''
 
 
-def register():
+def activate_shortcuts():
     
     wm = bpy.context.window_manager
    
@@ -44,19 +44,19 @@ def register():
         if km.name == 'Pose': 
             for kmi in km.keymap_items:
                 if kmi.idname == 'wm.call_menu' and kmi.type=='W' and kmi.shift==False and kmi.ctrl==False and kmi.alt==False:
-                    if kmi.properties.name == 'VIEW3D_MT_pose_specials':
+                    if kmi.properties.name == 'VIEW3D_MT_pose_context_menu':
                         kmi.active = False
                         save_dis_shortcut (km, kmi)
                         
                 elif kmi.idname == 'wm.call_menu' and kmi.type=='A' and kmi.shift==False and kmi.ctrl==True and kmi.alt==False:
                     if kmi.properties.name == 'VIEW3D_MT_pose_apply':
                         kmi.active = False
-                        save_dis_shortcut (km, kmi)  
+                        save_dis_shortcut (km, kmi)
                                                            
                 elif kmi.idname == 'wm.call_menu' and kmi.type=='W' and kmi.shift==True and kmi.ctrl==False and kmi.alt==False:
                     if kmi.properties.name == 'VIEW3D_MT_bone_options_toggle':
                         kmi.active = False
-                        save_dis_shortcut (km, kmi)     
+                        save_dis_shortcut (km, kmi)
     
     
     # add addon shortcuts
@@ -66,52 +66,52 @@ def register():
         if km.name == 'Object Mode':
           
             kmi = km.keymap_items.new ('wm.call_menu', 'F', 'PRESS')
-            kmi.properties.name = "Me_GYAZ_OffsetAnimation"
+            kmi.properties.name = "VIEW3D_MT_GYAZ_OffsetAnimation"
             save_shortcut (km, kmi)
             
-            kmi = km.keymap_items.new ('wm.call_menu', 'W', 'PRESS', shift=True)
-            kmi.properties.name = "Me_GYAZ_ExtractRootMotion"
+            kmi = km.keymap_items.new ('wm.call_menu', 'Q', 'PRESS')
+            kmi.properties.name = "VIEW3D_MT_GYAZ_AnimTools"
             save_shortcut (km, kmi)
             
         # Pose Mode
         elif km.name == 'Pose':
           
             kmi = km.keymap_items.new ('wm.call_menu', 'F', 'PRESS')
-            kmi.properties.name = "Me_GYAZ_OffsetAnimation"
+            kmi.properties.name = "VIEW3D_MT_GYAZ_OffsetAnimation"
             save_shortcut (km, kmi)
             
             kmi = km.keymap_items.new ('wm.call_menu', 'W', 'PRESS')
-            kmi.properties.name = "Me_GYAZ_Pose"
+            kmi.properties.name = "VIEW3D_MT_GYAZ_Pose"
             save_shortcut (km, kmi)
             
             kmi = km.keymap_items.new ('wm.call_menu', 'E', 'PRESS')
-            kmi.properties.name = "Me_GYAZ_Armature"
+            kmi.properties.name = "VIEW3D_MT_GYAZ_Armature"
             save_shortcut (km, kmi)
             
         # Dopesheet
         if km.name == 'Dopesheet':
           
             kmi = km.keymap_items.new ('wm.call_menu', 'W', 'PRESS')
-            kmi.properties.name = "Me_GYAZ_Dopesheet"
+            kmi.properties.name = "VIEW3D_MT_GYAZ_Dopesheet"
             save_shortcut (km, kmi)
             
         # Graoh Editor
         if km.name == 'Graph Editor':
           
             kmi = km.keymap_items.new ('wm.call_menu', 'W', 'PRESS')
-            kmi.properties.name = "Me_GYAZ_GraphEditor"
+            kmi.properties.name = "VIEW3D_MT_GYAZ_GraphEditor"
             save_shortcut (km, kmi)
             
         # Weight Paint Mode
         if km.name == 'Weight Paint':
           
             kmi = km.keymap_items.new ('wm.call_menu', 'Q', 'PRESS')
-            kmi.properties.name = "Me_GYAZ_WeightTools"
+            kmi.properties.name = "VIEW3D_MT_GYAZ_WeightTools"
             save_shortcut (km, kmi)
                   
 
 
-def unregister ():
+def deactivate_shortcuts():
      
     wm = bpy.context.window_manager
     

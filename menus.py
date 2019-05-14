@@ -21,9 +21,9 @@
 ###############################################################################
 
 import bpy
-from bpy.types import Operator, Menu
+from bpy.types import Operator, Menu, Panel
 
-class Me_GYAZ_Pose (Menu):
+class VIEW3D_MT_GYAZ_Pose (Menu):
     bl_label = 'Pose'
     
     def draw (self, context):
@@ -55,7 +55,7 @@ class Me_GYAZ_Pose (Menu):
         lay.operator ('pose.paths_clear', text='Clear Paths')
         
 
-class Me_GYAZ_Armature (Menu):
+class VIEW3D_MT_GYAZ_Armature (Menu):
     bl_label = 'Armature'
     
     def draw (self, context):
@@ -70,7 +70,7 @@ class Me_GYAZ_Armature (Menu):
         lay.operator ('pose.constraints_copy', text='Copy Constraints to Selected')
         
         
-class Me_GYAZ_Dopesheet (Menu):
+class DOPESHEET_MT_GYAZ_Dopesheet (Menu):
     bl_label = 'Dopesheet'
     
     def draw (self, context):
@@ -102,7 +102,7 @@ class Me_GYAZ_Dopesheet (Menu):
         lay.operator ('anim.channels_fcurves_enable')
                 
         
-class Me_GYAZ_GraphEditor (Menu):
+class GRAPH_MT_GYAZ_GraphEditor (Menu):
     bl_label = 'Graph Editor'
     
     def draw (self, context):
@@ -138,7 +138,7 @@ class Me_GYAZ_GraphEditor (Menu):
         lay.operator ('graph.euler_filter')
         
         
-class Me_GYAZ_WeightTools (Menu):
+class VIEW3D_MT_GYAZ_WeightTools (Menu):
     bl_label = 'Weight Tools'
     
     def draw (self, context):
@@ -184,6 +184,56 @@ class Me_GYAZ_WeightTools (Menu):
         lay.operator ('paint.weight_set', text='Set Weight')      
 
 
+class VIEW3D_MT_GYAZ_AnimTools (Menu):
+    bl_label = 'Object Anim Tools'
+    
+    #add ui elements here
+    def draw (self, context):
+        scene = bpy.context.scene
+        lay = self.layout
+        lay.label (text='Extract Root Motion:')
+        lay.separator ()
+        lay.operator_context = 'INVOKE_REGION_WIN'
+        lay.operator ('anim.gyaz_extract_root_motion_base', text="Base")
+        lay.operator ('anim.gyaz_extract_root_motion_loc_z', text="Loc Z")
+        lay.separator ()
+        lay.operator('anim.gyaz_extract_root_motion_manual', text="Start Manual")
+        lay.operator('anim.extract_root_motion_manual_cancel', text="Cancel Manual", icon='PANEL_CLOSE')
+        lay.operator('anim.gyaz_extract_root_motion_bake_manual', text="Bake Manual", icon='FILE_TICK')
+        lay.separator ()
+        lay.operator ('anim.gyaz_extract_root_motion_visualize', text='Visualize')
+        lay.operator('anim.gyaz_extract_root_motion_delete_root_anim', text="Delete Root Anim")
+        lay.operator ('anim.gyaz_extract_root_copy_to_bone', text="Move To Root Bone")
+        lay.separator ()
+        lay.operator ('nla.bake')
+        lay.operator ('anim.gyaz_retarget_rest_pose', text='Retarget Rest Pose')
+    
+    #when the buttons should show up    
+    @classmethod
+    def poll(cls, context):
+        ao = context.active_object
+        if ao != None:
+            return context.mode == 'OBJECT' and bpy.context.object.type == 'ARMATURE'
+        
+
+class VIEW3D_PT_GYAZ_Animation (Panel):
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'AnimTools'
+    bl_label = 'Animation'    
+    
+    #add ui elements here
+    def draw (self, context):
+        lay = self.layout
+        col = lay.column (align=True)
+        col.operator ('nla.bake')
+        col.operator ('anim.gyaz_retarget_rest_pose', text='Retarget Rest Pose')
+
+    #when the buttons should show up    
+    @classmethod
+    def poll(cls, context):
+        return bpy.context.object is not None and (bpy.context.mode == 'OBJECT' or bpy.context.mode == 'POSE')
+
         
 #######################################################
 #######################################################
@@ -193,19 +243,23 @@ class Me_GYAZ_WeightTools (Menu):
 
 def register():
         
-    bpy.utils.register_class (Me_GYAZ_Pose)    
-    bpy.utils.register_class (Me_GYAZ_Armature)    
-    bpy.utils.register_class (Me_GYAZ_Dopesheet)    
-    bpy.utils.register_class (Me_GYAZ_GraphEditor)    
-    bpy.utils.register_class (Me_GYAZ_WeightTools)    
+    bpy.utils.register_class (VIEW3D_MT_GYAZ_Pose)    
+    bpy.utils.register_class (VIEW3D_MT_GYAZ_Armature)    
+    bpy.utils.register_class (DOPESHEET_MT_GYAZ_Dopesheet)    
+    bpy.utils.register_class (GRAPH_MT_GYAZ_GraphEditor)    
+    bpy.utils.register_class (VIEW3D_MT_GYAZ_WeightTools)    
+    bpy.utils.register_class (VIEW3D_MT_GYAZ_AnimTools)    
+    bpy.utils.register_class (VIEW3D_PT_GYAZ_Animation)    
 
 def unregister ():
     
-    bpy.utils.unregister_class (Me_GYAZ_Pose)
-    bpy.utils.unregister_class (Me_GYAZ_Armature)
-    bpy.utils.unregister_class (Me_GYAZ_Dopesheet)
-    bpy.utils.unregister_class (Me_GYAZ_GraphEditor)
-    bpy.utils.unregister_class (Me_GYAZ_WeightTools)
+    bpy.utils.unregister_class (VIEW3D_MT_GYAZ_Pose)
+    bpy.utils.unregister_class (VIEW3D_MT_GYAZ_Armature)
+    bpy.utils.unregister_class (DOPESHEET_MT_GYAZ_Dopesheet)
+    bpy.utils.unregister_class (GRAPH_MT_GYAZ_GraphEditor)
+    bpy.utils.unregister_class (VIEW3D_MT_GYAZ_WeightTools)
+    bpy.utils.unregister_class (VIEW3D_MT_GYAZ_AnimTools)
+    bpy.utils.unregister_class (VIEW3D_PT_GYAZ_Animation)
   
 if __name__ == "__main__":   
     register()      
