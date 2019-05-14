@@ -143,5 +143,5 @@ def deactivate_shortcuts():
                 except:
                     ""                   
   
-if __name__ == "__main__":   
-    register()
+def unregister ():
+    deactivate_shortcuts ()
