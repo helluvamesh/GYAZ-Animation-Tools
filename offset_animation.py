@@ -672,7 +672,8 @@ class DATA_PT_GYAZ_SetPoleAngle (Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = 'data'
-    bl_label = 'Setup IK Constraint'  
+    bl_label = 'Setup IK Constraint'
+    bl_options = {'DEFAULT_CLOSED'}
     
     #add ui elements here
     def draw (self, context):
