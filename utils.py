@@ -129,9 +129,4 @@ def set_properties_context (data):
        
         
 def list_to_visual_list (list):
-    line = ''
-    for index, item in enumerate(list):
-        if index > 0:
-            line += ', '
-        line += str(item)
-    return line
+    return ', '.join(list)

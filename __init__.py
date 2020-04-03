@@ -19,8 +19,8 @@
 bl_info = {   
  "name": "GYAZ Animation Tools",   
  "author": "Andras Gyalog",   
- "version": (2, 80, 0),   
- "blender": (2, 80, 0),   
+ "version": (2, 82, 0),   
+ "blender": (2, 82, 0),   
  "location": "",   
  "description": "Various animation tools",
  "warning": "",   
@@ -163,11 +163,12 @@ class GYAZ_AnimationTools_Preferences (AddonPreferences):
     
     # RETARGET REST POSE
     location_bones: StringProperty (default='hips', name='Location Bones', description='e.g.: hips, some_other_bone')
-    halve_frame_rate: BoolProperty (default=True, name='Halve Frame Rate')
+    halve_frame_rate: BoolProperty (default=False, name='Halve Frame Rate')
     override_frame_rate: IntProperty (default=30, name='Override Frame Rate', description="ignored if 'Halve Frame Rate' is False")
     bake: BoolProperty (default=True, name='Bake', description='Bake action to target rig. Forced if Halve Frame Rate is True')
-    use_target_bone_prefix: BoolProperty (default=True, name='Use Target Bone Prefix')
-
+    use_target_bone_prefix: BoolProperty (default=False, name='Use Target Bone Prefix')
+    target_bone_prefix: StringProperty (default='', name="Target Bone Prefix")
+    correct_loc_keys: BoolProperty (default=False, name="Correct Location Keys")
                           
     def draw(self, context):
         lay = self.layout
@@ -205,11 +206,11 @@ class GYAZ_AnimationTools_Preferences (AddonPreferences):
         lay.label (text="Settings:")
         lay.prop (self, 'location_bones')
         lay.prop (self, 'halve_frame_rate')
-        row = lay.row ()
-        row.prop (self, 'override_frame_rate')
-        row.label (text='')
+        lay.prop (self, 'override_frame_rate')
         lay.prop (self, 'bake')
         lay.prop (self, 'use_target_bone_prefix')
+        lay.prop (self, 'target_bone_prefix')
+        lay.prop (self, 'correct_loc_keys')
         lay.label (text='')
         lay.label (text='Setup IK Constraint:')
         lay.label (text='Location: Properties Editor > Data > Setup IK Constraint')

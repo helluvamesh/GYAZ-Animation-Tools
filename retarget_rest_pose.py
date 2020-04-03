@@ -41,7 +41,8 @@ class Op_GYAZ_RetargetRestPose (bpy.types.Operator):
     override_frame_rate: IntProperty (default=prefs.override_frame_rate, name='Scene Frame Rate', description="Ignored if 'Halve Frame Rate' is False", min=1)
     bake: BoolProperty (default=prefs.bake, name='Bake', description='Bake action to target rig')
     use_target_bone_prefix: BoolProperty (default=prefs.use_target_bone_prefix, name='Use Target Bone Prefix')
-    target_bone_prefix: StringProperty (default=prefs.bone_prefix, name='Target Bone Prefix', description='target bone name = prefix + source bone name')
+    target_bone_prefix: StringProperty (default=prefs.target_bone_prefix, name='Target Bone Prefix', description='target bone name = prefix + source bone name')
+    correct_loc_keys: BoolProperty (default=prefs.correct_loc_keys, name="Correct Location Keys", description="e.g. correct foot slipping")
     
     #popup with properties
     def invoke(self, context, event):
@@ -116,52 +117,17 @@ class Op_GYAZ_RetargetRestPose (bpy.types.Operator):
                             if halve_frame_rate == True:                            
                                 scene.render.fps = override_frame_rate
                             
-                            # select target rig
-                            bpy.ops.object.mode_set (mode='OBJECT')
-                            bpy.ops.object.select_all (action='DESELECT')
-                            source_rig.select_set (True)
-                            bpy.context.view_layer.objects.active = source_rig 
-                                
-                            # save area
-                            area = bpy.context.area.type
-                            # make dope sheet active area
-                            bpy.context.area.type = 'DOPESHEET_EDITOR'
-                            bpy.context.space_data.mode = 'ACTION'
-                            
-                            # make sure all keys are visible
-                            bpy.context.space_data.dopesheet.show_only_selected = False
-                            # select all keys
-                            for fc in fcurves:
-                                for key in fc.keyframe_points:
-                                    key.select_control_point = True
-                                                                
                             # halve frame rate
-                            if halve_frame_rate == True:
-                                # sample keys
-                                bpy.ops.anim.gyaz_sample_fcurves ()
-                                # make dope sheet active area
-                                bpy.context.area.type = 'DOPESHEET_EDITOR'
-                                bpy.context.space_data.mode = 'ACTION'
-                                scene.frame_set (first_frame)
-                                # rescale time by 0.5
-                                bpy.ops.transform.transform (mode='TIME_SCALE', value=(0.5, 0, 0, 0), constraint_axis=(True, False, False), orient_axis='X', orient_type='GLOBAL', mirror=False, use_proportional_edit=False)
-                                bpy.ops.action.clean (channels=True, threshold=0.001)
-                                
+                            if halve_frame_rate:
+                                for fc in fcurves:
+                                    for key in fc.keyframe_points:
+                                        key.co.x = key.co.x * .5 + first_frame * .5
+                                        
                                 # frame start, end
                                 first_frame, last_frame = action.frame_range
                                 scene.frame_start = first_frame
                                 scene.frame_end = last_frame
                                 scene.frame_set (first_frame)
-                                    
-                            # set area back to 3d view
-                            bpy.context.area.type = area
-                            # remove constraints
-                            for name in target_bone_names:
-                                pbone = pbones[name]
-                                cs = pbone.constraints
-                                for c in cs:
-                                    if c.name.startswith ("GYAZ_retarget_rest_pose__48u2"):
-                                        cs.remove (c)
                                         
                     
                     # clear object transforms
@@ -196,13 +162,10 @@ class Op_GYAZ_RetargetRestPose (bpy.types.Operator):
                             c.target = source_rig
                             c.subtarget = name
 
-                    # halve framerate:
-                    # get active action
                     if hasattr (source_rig, 'animation_data') == True:
                         anim_data = source_rig.animation_data
                         if anim_data.action != None:
-                            action = anim_data.action
-                            fcurves = action.fcurves
+                            
                             # select target rig
                             bpy.ops.object.mode_set (mode='OBJECT')
                             bpy.ops.object.select_all (action='DESELECT')
@@ -216,12 +179,38 @@ class Op_GYAZ_RetargetRestPose (bpy.types.Operator):
                                 rig.data.bones[bone_name].select = True
                                 if index == 0:
                                     rig.data.bones.active = rig.data.bones[bone_name]
-
-                            # bake
+                            
                             if bake == True:
+                                
+                                # bake
                                 bpy.ops.object.mode_set (mode='POSE')
                                 bpy.ops.nla.bake(frame_start=first_frame, frame_end=last_frame, only_selected=True, visual_keying=True, clear_constraints=True, clear_parents=False, use_current_action=False, bake_types={'POSE'})
-            
+                            
+                                # correct loc anim
+                                if self.correct_loc_keys:
+                                    
+                                    anim_data = rig.animation_data
+                                    if anim_data.action != None:
+                                        
+                                        fcurves = anim_data.action.fcurves
+                                    
+                                        for source_name in location_bones:
+                                            
+                                            target_name = self.target_bone_prefix + source_name if self.use_target_bone_prefix else source_name
+                                            data_path = 'pose.bones["' + target_name + '"].location'
+                                            source_loc_z = (source_rig.data.bones[source_name].head @ source_rig.matrix_world)[2]
+                                            target_loc_z = (rig.data.bones[target_name].head @ rig.matrix_world)[2]
+                                            
+                                            if source_loc_z != 0 and target_loc_z != 0:
+                                                
+                                                multiplier = target_loc_z / source_loc_z
+                                                
+                                                for fc in fcurves:
+                                                    if fc.data_path == data_path:
+                                                        for key in fc.keyframe_points:
+                                                            key.co.y *= multiplier
+                                
+                                
             bpy.ops.object.mode_set (mode='OBJECT')
                                 
         else:
