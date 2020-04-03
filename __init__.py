@@ -161,7 +161,7 @@ class GYAZ_AnimationTools_Preferences (AddonPreferences):
     preset_18: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
     preset_19: CollectionProperty(type=GYAZ_ReduceRig_PresetItem)
     
-    # RETARGET REST POSE
+    # RETARGET POSE
     location_bones: StringProperty (default='hips', name='Location Bones', description='e.g.: hips, some_other_bone')
     halve_frame_rate: BoolProperty (default=False, name='Halve Frame Rate')
     override_frame_rate: IntProperty (default=30, name='Override Frame Rate', description="ignored if 'Halve Frame Rate' is False")
@@ -199,10 +199,10 @@ class GYAZ_AnimationTools_Preferences (AddonPreferences):
         lay.label (text="Modes: Object, Pose")        
         lay.label (text="Location: View3d>Properies(N)Panel>AnimTools>Reduce Rig")        
         lay.label (text='')
-        lay.label (text="Retarget Rest Pose:")
+        lay.label (text="Retarget:")
         lay.label (text="Change the rest pose of an animation.")
         lay.label (text="Modes: Object")
-        lay.label (text="Location: View3d>Properies(N)Panel>AnimTools>Animation>Retarget Rest Pose")
+        lay.label (text="Location: View3d>Properies(N)Panel>AnimTools>Animation>Retarget")
         lay.label (text="Settings:")
         lay.prop (self, 'location_bones')
         lay.prop (self, 'halve_frame_rate')
@@ -239,7 +239,7 @@ def unregister():
 register()
 
  
-modulesNames = ['offset_animation', 'root_motion_tools', 'rig_reducer', 'retarget_rest_pose', 'menus', 'shortcuts']
+modulesNames = ['offset_animation', 'root_motion_tools', 'rig_reducer', 'retarget', 'menus', 'shortcuts']
  
 import sys
 import importlib

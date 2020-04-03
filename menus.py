@@ -206,7 +206,7 @@ class VIEW3D_MT_GYAZ_AnimTools (Menu):
         lay.operator ('anim.gyaz_extract_root_copy_to_bone', text="Move To Root Bone")
         lay.separator ()
         lay.operator ('nla.bake')
-        lay.operator ('anim.gyaz_retarget_rest_pose', text='Retarget Rest Pose')
+        lay.operator ('anim.gyaz_retarget', text='Retarget')
     
     #when the buttons should show up    
     @classmethod
@@ -227,7 +227,7 @@ class VIEW3D_PT_GYAZ_Animation (Panel):
         lay = self.layout
         col = lay.column (align=True)
         col.operator ('nla.bake')
-        col.operator ('anim.gyaz_retarget_rest_pose', text='Retarget Rest Pose')
+        col.operator ('anim.gyaz_retarget', text='Retarget')
 
     #when the buttons should show up    
     @classmethod
