@@ -701,29 +701,6 @@ class DATA_PT_GYAZ_SetPoleAngle (Panel):
     def poll(cls, context):
         obj = bpy.context.object
         return obj is not None and (context.mode == 'OBJECT' or context.mode == 'POSE') and context.armature
-    
-    
-class VIEW3D_MT_GYAZ_OffsetAnimation (Menu):
-    bl_label = 'Offset Animation'
-    
-    def draw (self, context):
-        lay = self.layout
-        scene = context.scene
-        wm = context.window_manager
-        lay.operator_context = 'INVOKE_REGION_WIN'
-        lay.operator (Op_GYAZ_OffsetAnim.bl_idname, text='Global').Mode='GLOBAL'
-        lay.operator (Op_GYAZ_OffsetAnim.bl_idname, text='Local').Mode='SIMPLE_LOCAL'
-        lay.separator ()
-        lay.operator (Op_GYAZ_OffsetAnim.bl_idname, text='Local 2').Mode='LOCAL_2'
-        lay.operator (Op_GYAZ_OffsetAnim.bl_idname, text='Local 4').Mode='LOCAL_4'
-        lay.separator ()
-        lay.props_enum (scene, 'GYAZ_OffsetAnimFalloff')
-        lay.separator ()
-        if scene.GYAZ_OffsetAnimFalloff != 'LINEAR':
-            lay.prop (scene, 'GYAZ_OffsetAnimFalloffStrength_1', text='Strength')
-            lay.separator ()
-        lay.operator ('anim.gyaz_sample_fcurves')
-        lay.operator ('anim.gyaz_delete_timeline_markers', text='Delete Markers')
         
 
 class VIEW3D_PT_GYAZ_OffsetAnimation (Panel):
@@ -803,7 +780,6 @@ def register():
     bpy.utils.register_class (Op_GYAZ_SetupIKConstraint_GetActiveBone)
        
     bpy.utils.register_class (DATA_PT_GYAZ_SetPoleAngle)    
-    bpy.utils.register_class (VIEW3D_MT_GYAZ_OffsetAnimation) 
     bpy.utils.register_class (VIEW3D_PT_GYAZ_OffsetAnimation) 
 
 def unregister ():
@@ -816,7 +792,6 @@ def unregister ():
     bpy.utils.unregister_class (Op_GYAZ_SetupIKConstraint_GetActiveBone)
     
     bpy.utils.unregister_class (DATA_PT_GYAZ_SetPoleAngle)
-    bpy.utils.unregister_class (VIEW3D_MT_GYAZ_OffsetAnimation)
     bpy.utils.unregister_class (VIEW3D_PT_GYAZ_OffsetAnimation)
 
 

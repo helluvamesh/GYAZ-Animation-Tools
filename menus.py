@@ -185,25 +185,40 @@ class VIEW3D_MT_GYAZ_WeightTools (Menu):
 
 
 class VIEW3D_MT_GYAZ_AnimTools (Menu):
-    bl_label = 'Object Anim Tools'
+    bl_label = 'Anim Tools'
     
     #add ui elements here
     def draw (self, context):
         scene = bpy.context.scene
         lay = self.layout
-        lay.label (text='Extract Root Motion:')
-        lay.separator ()
+        
         lay.operator_context = 'INVOKE_REGION_WIN'
-        lay.operator ('anim.gyaz_extract_root_motion_base', text="Base")
-        lay.operator ('anim.gyaz_extract_root_motion_loc_z', text="Loc Z")
+        lay.operator ("anim.gyaz_offset_anim", text='Offset Global').Mode='GLOBAL'
+        lay.operator ("anim.gyaz_offset_anim", text='Offset Local').Mode='SIMPLE_LOCAL'
         lay.separator ()
-        lay.operator('anim.gyaz_extract_root_motion_manual', text="Start Manual")
-        lay.operator('anim.extract_root_motion_manual_cancel', text="Cancel Manual", icon='PANEL_CLOSE')
-        lay.operator('anim.gyaz_extract_root_motion_bake_manual', text="Bake Manual", icon='FILE_TICK')
+        lay.operator ("anim.gyaz_offset_anim", text='Offset Local 2').Mode='LOCAL_2'
+        lay.operator ("anim.gyaz_offset_anim", text='Offset Local 4').Mode='LOCAL_4'
         lay.separator ()
-        lay.operator ('anim.gyaz_extract_root_motion_visualize', text='Visualize')
+        lay.props_enum (scene, 'GYAZ_OffsetAnimFalloff')
+        lay.separator ()
+        if scene.GYAZ_OffsetAnimFalloff != 'LINEAR':
+            lay.prop (scene, 'GYAZ_OffsetAnimFalloffStrength_1', text='Falloff Strength')
+            lay.separator ()
+        lay.operator ('anim.gyaz_sample_fcurves')
+        lay.operator ('anim.gyaz_delete_timeline_markers', text='Delete Markers')
+        lay.separator ()
+        
+        lay.operator_context = 'INVOKE_REGION_WIN'
+        lay.operator ('anim.gyaz_extract_root_motion_base', text="Auto Root Motion: Base")
+        lay.operator ('anim.gyaz_extract_root_motion_loc_z', text="Auto Root Motion: Loc Z")
+        lay.separator ()
+        lay.operator('anim.gyaz_extract_root_motion_manual', text="Manual Root Motion: Start")
+        lay.operator('anim.extract_root_motion_manual_cancel', text="Manual Root Motion: Cancel", icon='PANEL_CLOSE')
+        lay.operator('anim.gyaz_extract_root_motion_bake_manual', text="Manual Root Motion: Bake", icon='FILE_TICK')
+        lay.separator ()
+        lay.operator ('anim.gyaz_extract_root_motion_visualize', text='Visualize Root Motion')
         lay.operator('anim.gyaz_extract_root_motion_delete_root_anim', text="Delete Root Anim")
-        lay.operator ('anim.gyaz_extract_root_copy_to_bone', text="Move To Root Bone")
+        lay.operator ('anim.gyaz_extract_root_copy_to_bone', text="Move Root Anim To Root Bone")
         lay.separator ()
         lay.operator ('nla.bake')
         lay.operator ('anim.gyaz_retarget', text='Retarget')
@@ -213,7 +228,7 @@ class VIEW3D_MT_GYAZ_AnimTools (Menu):
     def poll(cls, context):
         ao = context.active_object
         if ao != None:
-            return context.mode == 'OBJECT' and bpy.context.object.type == 'ARMATURE'
+            return context.mode == 'OBJECT' or context.mode == 'POSE' and bpy.context.object.type == 'ARMATURE'
         
         
 #######################################################

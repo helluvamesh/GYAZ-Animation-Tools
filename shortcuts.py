@@ -64,10 +64,6 @@ def activate_shortcuts():
 
         # Object Mode
         if km.name == 'Object Mode':
-          
-            kmi = km.keymap_items.new ('wm.call_menu', 'F', 'PRESS')
-            kmi.properties.name = "VIEW3D_MT_GYAZ_OffsetAnimation"
-            save_shortcut (km, kmi)
             
             kmi = km.keymap_items.new ('wm.call_menu', 'Q', 'PRESS')
             kmi.properties.name = "VIEW3D_MT_GYAZ_AnimTools"
@@ -75,9 +71,9 @@ def activate_shortcuts():
             
         # Pose Mode
         elif km.name == 'Pose':
-          
-            kmi = km.keymap_items.new ('wm.call_menu', 'F', 'PRESS')
-            kmi.properties.name = "VIEW3D_MT_GYAZ_OffsetAnimation"
+            
+            kmi = km.keymap_items.new ('wm.call_menu', 'Q', 'PRESS')
+            kmi.properties.name = "VIEW3D_MT_GYAZ_AnimTools"
             save_shortcut (km, kmi)
             
             kmi = km.keymap_items.new ('wm.call_menu', 'W', 'PRESS')
