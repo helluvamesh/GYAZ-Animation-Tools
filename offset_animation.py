@@ -63,6 +63,7 @@ class Op_GYAZ_OffsetAnim (bpy.types.Operator):
     bl_idname = "anim.gyaz_offset_anim"  
     bl_label = "Offset Anim"
     bl_description = "Offset anim of selected bones. Global: from start to end of timeline, Local: between two markers, Local 2: between two markers with a user defined falloff curve, Local 4: marker1-2: falloff, m2-3: constant, m3-4: falloff" #For best results with smooth falloff you should sample the fcurves but you do not have to do so, though in that case you are responsible for having enough keyframes.
+    bl_options = {'REGISTER', 'UNDO'}
     
     #properties
     Mode: EnumProperty(
@@ -479,9 +480,7 @@ class Op_GYAZ_AnimSampleFcurves (bpy.types.Operator):
     bl_idname = "anim.gyaz_sample_fcurves"  
     bl_label = "Sample Fcurves"
     bl_description = "Places a keyframe on every frame for selected bones. For best results with local offset with smooth falloff you should sample the fcurves, if you do not, you are responsible for having enough keyframes for decent results"
-    
-    #properties
-
+    bl_options = {'REGISTER', 'UNDO'}
     
     #operator function
     def execute(self, context):
@@ -532,6 +531,7 @@ class Op_GYAZ_DeleteTimelineMarkers (bpy.types.Operator):
     bl_idname = "anim.gyaz_delete_timeline_markers"  
     bl_label = "Delete Timeline Markers"
     bl_description = "Delete all timeline markers"
+    bl_options = {'REGISTER', 'UNDO'}
     
     #operator function
     def execute(self, context):
@@ -571,6 +571,7 @@ class Op_GYAZ_SetupIKConstraint (bpy.types.Operator):
     bl_idname = "pose.setup_ik_constraint"  
     bl_label = "Setup IK Constraint"
     bl_description = "Add an IK constraint to the constraint bone with all the settings done"
+    bl_options = {'REGISTER', 'UNDO'}
     
     #operator function
     def execute(self, context):

@@ -215,25 +215,6 @@ class VIEW3D_MT_GYAZ_AnimTools (Menu):
         if ao != None:
             return context.mode == 'OBJECT' and bpy.context.object.type == 'ARMATURE'
         
-
-class VIEW3D_PT_GYAZ_Animation (Panel):
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'AnimTools'
-    bl_label = 'Animation'    
-    
-    #add ui elements here
-    def draw (self, context):
-        lay = self.layout
-        col = lay.column (align=True)
-        col.operator ('nla.bake')
-        col.operator ('anim.gyaz_retarget', text='Retarget')
-
-    #when the buttons should show up    
-    @classmethod
-    def poll(cls, context):
-        return bpy.context.object is not None and (bpy.context.mode == 'OBJECT' or bpy.context.mode == 'POSE')
-
         
 #######################################################
 #######################################################
@@ -248,8 +229,7 @@ def register():
     bpy.utils.register_class (DOPESHEET_MT_GYAZ_Dopesheet)    
     bpy.utils.register_class (GRAPH_MT_GYAZ_GraphEditor)    
     bpy.utils.register_class (VIEW3D_MT_GYAZ_WeightTools)    
-    bpy.utils.register_class (VIEW3D_MT_GYAZ_AnimTools)    
-    bpy.utils.register_class (VIEW3D_PT_GYAZ_Animation)    
+    bpy.utils.register_class (VIEW3D_MT_GYAZ_AnimTools)      
 
 def unregister ():
     
@@ -259,7 +239,6 @@ def unregister ():
     bpy.utils.unregister_class (GRAPH_MT_GYAZ_GraphEditor)
     bpy.utils.unregister_class (VIEW3D_MT_GYAZ_WeightTools)
     bpy.utils.unregister_class (VIEW3D_MT_GYAZ_AnimTools)
-    bpy.utils.unregister_class (VIEW3D_PT_GYAZ_Animation)
   
 if __name__ == "__main__":   
     register()      

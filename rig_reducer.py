@@ -25,6 +25,8 @@ from bpy.types import Panel, Operator
 from bpy.props import *
 from .utils import report
 from .utils import popup
+from .utils import select_only
+from .utils import get_all_descendant_bone_names
 
 
 prefs = bpy.context.preferences.addons[__package__].preferences
@@ -239,6 +241,7 @@ class Op_GYAZ_ReduceRig_MergeWeightsAndRemoveBones (bpy.types.Operator):
     bl_idname = "object.gyaz_reduce_rig_merge_weights_and_remove_bones"  
     bl_label = "GYAZ Reduce Rig: Merge Weights And Remove Bones"
     bl_description = ""
+    bl_options = {'REGISTER', 'UNDO'}
 
     ui_remove_bones: BoolProperty (name='remove bones', default=True)    
     ui_merge_weights: BoolProperty (name='merge weights', default=True)
@@ -263,110 +266,30 @@ class Op_GYAZ_ReduceRig_MergeWeightsAndRemoveBones (bpy.types.Operator):
             
             for slot in scene_bones:
                 if slot.name != '':
+                    select_only (rig)
+                    
                     descendants = []
                     
-                    bpy.ops.object.mode_set (mode='OBJECT')
-                    bpy.ops.object.select_all (action='DESELECT')
-                    rig.select_set (True)
-                    bpy.context.view_layer.objects.active = rig
-                    
                     #make list of descendants
-                    bpy.ops.object.mode_set (mode='EDIT') 
                     bone_name = slot.name
-                    ebones = rig.data.edit_bones
-                    if ebones.get (bone_name) != None:
-                        ebone = ebones[bone_name]
-                        children = ebone.children
-                        for child in children:
-                            descendants.append (child.name)
-                            children = child.children
-                            if len (children) > 0:
-                                for child in children:
-                                    descendants.append (child.name)
-                                    children = child.children
-                                    if len (children) > 0:
-                                        for child in children:
-                                            descendants.append (child.name)
-                                            children = child.children
-                                            if len (children) > 0:
-                                                for child in children:
-                                                    descendants.append (child.name)
-                                                    children = child.children 
-                                                    if len (children) > 0:
-                                                        for child in children:
-                                                            descendants.append (child.name)
-                                                            children = child.children
-                                                            if len (children) > 0:
-                                                                for child in children:
-                                                                    descendants.append (child.name)
-                                                                    children = child.children                                                                                                              
-                                                                    if len (children) > 0:
-                                                                        for child in children:
-                                                                            descendants.append (child.name)
-                                                                            children = child.children                                                   
-                                                                            if len (children) > 0:
-                                                                                for child in children:
-                                                                                    descendants.append (child.name)
-                                                                                    children = child.children                                                      
-                                                                                    if len (children) > 0:
-                                                                                        for child in children:
-                                                                                            descendants.append (child.name)
-                                                                                            children = child.children                                                                   
-                                                                                            if len (children) > 0:
-                                                                                                for child in children:
-                                                                                                    descendants.append (child.name)
-                                                                                                    children = child.children
-                                                                                                    if len (children) > 0:
-                                                                                                        for child in children:
-                                                                                                            descendants.append (child.name)
-                                                                                                            children = child.children
-                                                                                                            if len (children) > 0:
-                                                                                                                for child in children:
-                                                                                                                    descendants.append (child.name)
-                                                                                                                    children = child.children
-                                                                                                                    if len (children) > 0:
-                                                                                                                        for child in children:
-                                                                                                                            descendants.append (child.name)
-                                                                                                                            children = child.children 
-                                                                                                                            if len (children) > 0:
-                                                                                                                                for child in children:
-                                                                                                                                    descendants.append (child.name)
-                                                                                                                                    children = child.children                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
-                                                                                                                                    if len (children) > 0:
-                                                                                                                                        for child in children:
-                                                                                                                                            descendants.append (child.name)
-                                                                                                                                            children = child.children     
-                                                                                                                                            if len (children) > 0:
-                                                                                                                                                for child in children:
-                                                                                                                                                    descendants.append (child.name)
-                                                                                                                                                    children = child.children 
-                                                                                                                                                    if len (children) > 0:
-                                                                                                                                                        for child in children:
-                                                                                                                                                            descendants.append (child.name)
-                                                                                                                                                            children = child.children                                                                                                                 
-                                                                                                                                                            if len (children) > 0:
-                                                                                                                                                                for child in children:
-                                                                                                                                                                    descendants.append (child.name)
-                                                                                                                                                                    children = child.children     
-                                                                                                                                                                    if len (children) > 0:
-                                                                                                                                                                        for child in children:
-                                                                                                                                                                            descendants.append (child.name)
-                                                                                                                                                                            children = child.children     
-                                                                                                                                                                                   
-
-                        #add slot bone's name to descendants
-                        children_only = slot.name_children_only
-                        if children_only == False:                                                                   
-                            descendants = [slot.name] + descendants
+                    bones = rig.data.bones
+                    bone = bones.get (bone_name)
+                    if bone != None:
+                        descendants = get_all_descendant_bone_names (bone)
+                        
+                        if slot.name_children_only == False:                                                                   
+                            descendants.insert (0, bone.name)
                         
                         #remove bones
-                        if remove_bones:               
+                        if remove_bones: 
+                            bpy.ops.object.mode_set (mode="EDIT")
+                            ebones = rig.data.edit_bones              
                             for name in descendants:
                                 ebones.remove (ebones[name])
                     
                         #merge weights
                         if merge_weights:
-                            bpy.ops.object.mode_set (mode='OBJECT')
+                            bpy.ops.object.mode_set (mode="OBJECT")
                             meshes = []
                             if len(rig.children) > 0:
                                 for child in rig.children:
@@ -380,9 +303,7 @@ class Op_GYAZ_ReduceRig_MergeWeightsAndRemoveBones (bpy.types.Operator):
                                 if weight_to_merge_to != '':       
                                 
                                     for mesh in meshes:
-                                        bpy.ops.object.select_all (action='DESELECT')
-                                        mesh.select_set (True)
-                                        bpy.context.view_layer.objects.active = mesh
+                                        select_only (mesh)
                                         #mix weights if mesh has those weights
                                         vgroups = mesh.vertex_groups
                                         if vgroups.get (weight_to_merge) != None:
@@ -399,10 +320,7 @@ class Op_GYAZ_ReduceRig_MergeWeightsAndRemoveBones (bpy.types.Operator):
                                             vgroups.remove (vgroups[weight_to_merge])
             
             #finalize
-            bpy.ops.object.mode_set (mode='OBJECT')
-            bpy.ops.object.select_all (action='DESELECT')
-            rig.select_set (True)
-            bpy.context.view_layer.objects.active = rig       
+            select_only (rig)   
             
         return {'FINISHED'}
     

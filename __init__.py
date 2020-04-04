@@ -73,41 +73,12 @@ class GYAZ_AnimationTools_Preferences (AddonPreferences):
          
     # ROOT MOTION TOOLS
     root_bone: StringProperty(
-            name="Root (Prefix not added)",
+            name="Root",
             default='root'
-            )    
-    bone_prefix: StringProperty(
-            name="Bone Prefix",
-            default=''
             )
-    bone_left_suffix: StringProperty(
-            name="Bone Left Suffix",
-            default='_l'
-            )
-    bone_right_suffix: StringProperty(
-            name="Bone Right Suffix",
-            default='_r'
-            )          
     drive_bone: StringProperty(
             name="Drive Bone",
             default='hips'
-            ) 
-    drive_bone_forward: EnumProperty(
-        items=(
-            ('+X', "+X", ""),
-            ('-X', "-X", ""),
-            ('+Y', "+Y", ""),
-            ('-Y', "-Y", ""),
-            ('+Z', "+Z", ""),
-            ('-Z', "-Z", "")
-            ),
-        default='+Z',
-        name="Drive Bone Forward Axis",
-        description="Drive bone's axis that points forward."
-        )  
-    toes: StringProperty(
-            name="toes",
-            default='toes'
             )
     
     # RIG REDUCER           
@@ -184,15 +155,8 @@ class GYAZ_AnimationTools_Preferences (AddonPreferences):
         lay.label (text="Modes: Object")
         lay.label (text="Location: View3d>Properies(N)Panel>AnimTools>Extract Root Motion")
         lay.label (text="Menu Shortcut: Q")
-        lay.label (text="Bones:")
-        lay.prop (self, "bone_prefix")
-        lay.prop (self, "bone_left_suffix")
-        lay.prop (self, "bone_right_suffix")
         lay.prop (self, "drive_bone")
-        lay.prop (self, "drive_bone_forward")
-        lay.prop (self, "toes")
         lay.prop (self, "root_bone")
-        lay.label (text="All these bones should be on a visible bone layer.")
         lay.label (text='')
         lay.label (text="Rig Reducer:")
         lay.label (text="For creating Levels of Detail (LODs) of armatures and bone weights.")
@@ -239,7 +203,7 @@ def unregister():
 register()
 
  
-modulesNames = ['offset_animation', 'root_motion_tools', 'rig_reducer', 'retarget', 'menus', 'shortcuts']
+modulesNames = ['offset_animation', 'root_motion_tools', 'retarget', 'rig_reducer', 'menus', 'shortcuts']
  
 import sys
 import importlib

@@ -130,3 +130,23 @@ def set_properties_context (data):
         
 def list_to_visual_list (list):
     return ', '.join(list)
+
+
+def select_only (obj):
+    if bpy.context.mode != 'OBJECT':
+        bpy.ops.object.mode_set (mode = 'OBJECT')
+    bpy.ops.object.select_all (action='DESELECT')
+    obj.select_set (True)
+    bpy.context.view_layer.objects.active = obj
+    
+    
+def _get_descendants(bone, list):
+    for child in bone.children:
+        list.append(child.name)
+        _get_descendants(child, list)
+        
+        
+def get_all_descendant_bone_names(bone):
+    list = []
+    _get_descendants(bone, list)
+    return list

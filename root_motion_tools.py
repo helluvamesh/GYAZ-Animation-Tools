@@ -23,6 +23,9 @@
 
 import bpy
 from .utils import popup_lines as popup
+from .utils import popup as popup_single
+from .utils import select_only
+from bpy.types import Scene
 
 
 #bones
@@ -123,6 +126,7 @@ class Op_GYAZ_ExtractRootMotion_Visualize (bpy.types.Operator):
     bl_idname = "anim.gyaz_extract_root_motion_visualize"  
     bl_label = "Extract Root Motion: Visualize"
     bl_description = "Append capsule and arrow and parent them to armauture object"
+    bl_options = {'REGISTER', 'UNDO'}
 
     
     #operator function
@@ -198,6 +202,7 @@ class Op_GYAZ_ExtractRootMotion_Base (bpy.types.Operator):
     bl_idname = "anim.gyaz_extract_root_motion_base"  
     bl_label = "Extract Root Motion: Base"
     bl_description = "Extract root motion: location XY and rotation Z and applies it to the armature object. Set first and last frame on timeline"
+    bl_options = {'REGISTER', 'UNDO'}
     
     #properties    
     ui_modes: EnumProperty(
@@ -209,11 +214,6 @@ class Op_GYAZ_ExtractRootMotion_Base (bpy.types.Operator):
         name="Mode",
         description="Extract Location XY and Rotation Z or only Location XY"
         )
-        
-    ui_drive_bone: StringProperty(
-        name='Drive Bone',
-        default=prefs.bone_prefix+prefs.drive_bone,
-        description="Bone that moves the whole skeleton, e.g. hips or pelvis")
 
     ui_drive_bone_forward: EnumProperty(
         items=(
@@ -224,7 +224,7 @@ class Op_GYAZ_ExtractRootMotion_Base (bpy.types.Operator):
             ('+Z', "+Z", ""),
             ('-Z', "-Z", "")
             ),
-        default=prefs.drive_bone_forward,
+        default="+Z",
         name="Drive Bone Forward Axis",
         description="Drive bone's axis that points forward"
         )
@@ -244,7 +244,7 @@ class Op_GYAZ_ExtractRootMotion_Base (bpy.types.Operator):
     def execute(self, context):
         
         scene = bpy.context.scene
-        driveBone_name = self.ui_drive_bone
+        driveBone_name = scene.gyaz_root_motion_drive_bone
         
         def main ():
             
@@ -448,6 +448,7 @@ class Op_GYAZ_ExtractRootMotion_Base (bpy.types.Operator):
 
                 #constraint drive bone to original rotation
                 c = driveBone_pb.constraints.new ('COPY_ROTATION')
+                c.name = "GYAZ_root_motion__rot"
                 c.target = orig_rotation
                 c.use_offset = False
                 c.use_x = False
@@ -458,6 +459,7 @@ class Op_GYAZ_ExtractRootMotion_Base (bpy.types.Operator):
 
             #constraint drive bone to orientation target
             c = driveBone_pb.constraints.new ('COPY_LOCATION')
+            c.name = "GYAZ_root_motion__loc"
             c.target = rotator
             c.use_offset = False
             c.use_x = True
@@ -490,9 +492,13 @@ class Op_GYAZ_ExtractRootMotion_Base (bpy.types.Operator):
 
 
             #bake armature constraints
-            bpy.ops.nla.bake(frame_start=firstFrame, frame_end=lastFrame, visual_keying=True, clear_constraints=True, clear_parents=True, use_current_action=True, bake_types={'POSE'})
+            bpy.ops.nla.bake(frame_start=firstFrame, frame_end=lastFrame, visual_keying=True, clear_constraints=False, clear_parents=True, use_current_action=True, bake_types={'POSE'})
             bpy.ops.nla.bake(frame_start=firstFrame, frame_end=lastFrame, visual_keying=True, clear_constraints=True, clear_parents=True, use_current_action=True, bake_types={'OBJECT'})
-
+            
+            #clear constraints            
+            for c in driveBone_pb.constraints:
+                if c.name.startswith("GYAZ_root_motion"):
+                    driveBone_pb.constraints.remove(c)
 
             #CLEAN UP
             bpy.data.objects.remove (rotator, do_unlink=True)
@@ -514,6 +520,7 @@ class Op_GYAZ_ExtractRootMotion_locZ (bpy.types.Operator):
     bl_idname = "anim.gyaz_extract_root_motion_loc_z"  
     bl_label = "Extract Root Motion: Loc Z"
     bl_description = "Extract root motion from drive bone and apply it to armature object: location Z. It is a local effect, works after placing exactly 4 markers on the timeline. Strength: marker 1: 0, marker 2-3: 1, marker 4: 0"
+    bl_options = {'REGISTER', 'UNDO'}
     
     #properties
     
@@ -525,21 +532,16 @@ class Op_GYAZ_ExtractRootMotion_locZ (bpy.types.Operator):
     ),
     default='toes',
     name ="Reference"
-    ) 
-    
-    ui_drive_bone: StringProperty(
-        name='Drive Bone',
-        default=prefs.bone_prefix+prefs.drive_bone,
-        description="Bone that moves the whole skeleton, e.g. hips or pelvis")
+    )
         
     ui_left_toes: StringProperty(
         name='Left Toes',
-        default=prefs.bone_prefix+prefs.toes+prefs.bone_left_suffix,
+        default="toes_l",
         description="")
         
     ui_right_toes: StringProperty(
         name='Right Toes',
-        default=prefs.bone_prefix+prefs.toes+prefs.bone_right_suffix,
+        default="toes_r",
         description="")
     
     #popup with properties
@@ -551,13 +553,21 @@ class Op_GYAZ_ExtractRootMotion_locZ (bpy.types.Operator):
     #operator function
     def execute(self, context):
         
+        scene = context.scene
+        markers = scene.timeline_markers
+        good_to_go = len(markers) == 4
+        
+        if not good_to_go:
+            popup_single ("Add 4 markers to the timeline", "ERROR")
+            return {"FINISHED"}
+        
         if self.ui_method == 'drive bone':
         
             #SETTINGS-SETTINGS-SETTINGS-SETTINGS
             #NAME OF DRIVE-BONE
             
             scene = bpy.context.scene
-            driveBone_name = self.ui_drive_bone
+            driveBone_name = scene.gyaz_root_motion_drive_bone
 
             #END OF SETTINGS
 
@@ -694,7 +704,7 @@ class Op_GYAZ_ExtractRootMotion_locZ (bpy.types.Operator):
                 for frameIndex in range(first_marker, last_marker+1):
                     scene.frame_set(frameIndex)
                     influence = root['influence_DRM_78k4']
-                    bpy.ops.transform.translate(value=(0, 0, lerp(0, -(empty31.location[2]), influence)), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False)
+                    bpy.ops.transform.translate(value=(0, 0, lerp(0, -(empty31.location[2]), influence)), constraint_axis=(False, False, True), orient_type='GLOBAL', mirror=False)
                     bpy.ops.anim.keyframe_insert_menu(type='Location')
                     #print(frameIndex, touch_pointZ)
                     
@@ -713,7 +723,7 @@ class Op_GYAZ_ExtractRootMotion_locZ (bpy.types.Operator):
             #SETTINGS-SETTINGS-SETTINGS-SETTINGS
             #NAME OF DRIVE-BONE
             scene = bpy.context.scene
-            driveBone_name = self.ui_drive_bone
+            driveBone_name = scene.gyaz_root_motion_drive_bone
             #NAME OF LEFT TOE
             left_toe_name = self.ui_left_toes
             #NAME OF RIGHT TOE
@@ -925,13 +935,6 @@ class Op_GYAZ_ExtractRootMotion_locZ (bpy.types.Operator):
         #end of operator
         return {'FINISHED'}
     
-    #when the buttons should show up    
-    @classmethod
-    def poll(cls, context):
-        scene = context.scene
-        markers = scene.timeline_markers
-        return len(markers) == 4
-    
 
 #EXTRACT ROOT MOTION: MANUAL
 class Op_GYAZ_ExtractRootMotion_Manual (bpy.types.Operator):
@@ -939,6 +942,7 @@ class Op_GYAZ_ExtractRootMotion_Manual (bpy.types.Operator):
     bl_idname = "anim.gyaz_extract_root_motion_manual"  
     bl_label = "Extract Root Motion: Manual"
     bl_description = "Adjust root (armature object) location and rotation manually, insert keyframes then hit 'Bake'. Set first and last frame on timeline"
+    bl_options = {'REGISTER', 'UNDO'}
     
     #properties    
     ui_modes: EnumProperty(
@@ -951,15 +955,9 @@ class Op_GYAZ_ExtractRootMotion_Manual (bpy.types.Operator):
         description = "Either used for editing previously extracted root motion or for extracting manualy from the start"
         )
         
-    ui_drive_bone: StringProperty(
-        name='Drive Bone',
-        default=prefs.bone_prefix+prefs.drive_bone,
-        description="Bone that moves the whole skeleton, e.g. hips or pelvis.")
-        
     def draw (self, context):
         lay = self.layout
         lay.prop (self, 'ui_modes', expand=True)
-        lay.prop (self, 'ui_drive_bone')
         
     #popup with properties
     def invoke(self, context, event):
@@ -973,7 +971,7 @@ class Op_GYAZ_ExtractRootMotion_Manual (bpy.types.Operator):
         #NAME OF DRIVE-BONE
         
         scene = bpy.context.scene
-        driveBone_name = self.ui_drive_bone
+        driveBone_name = scene.gyaz_root_motion_drive_bone
         
         bake_previous_data = self.ui_modes
         
@@ -1149,6 +1147,7 @@ class Op_GYAZ_ExtractRootMotion_Manual (bpy.types.Operator):
             #add Copy Location constraint to driveBone, target: empty_static
             constraints = bpy.context.object.pose.bones[driveBone.name].constraints
             c = constraints.new (type='COPY_LOCATION')
+            c.name = "GYAZ_root_motion__loc"
             c.target = empty_static
             c.use_offset = False
             c.use_x = True
@@ -1158,6 +1157,7 @@ class Op_GYAZ_ExtractRootMotion_Manual (bpy.types.Operator):
             #add Copy Rotation constraint to driveBone, target: empty_static
             constraints = bpy.context.object.pose.bones[driveBone.name].constraints
             c = constraints.new (type='COPY_ROTATION')
+            c.name = "GYAZ_root_motion__rot"
             c.target = empty_static
             c.use_offset = False
             c.use_x = True
@@ -1212,6 +1212,7 @@ class Op_GYAZ_ExtractRootMotion_ManualBake (bpy.types.Operator):
     bl_idname = "anim.gyaz_extract_root_motion_bake_manual"  
     bl_label = "Extract Root Motion: Bake Manual"
     bl_description = "Bake keyframed manual root offset"
+    bl_options = {'REGISTER', 'UNDO'}
     
     #operator function
     def execute(self, context):
@@ -1227,6 +1228,7 @@ class Op_GYAZ_ExtractRootMotion_ManualBake (bpy.types.Operator):
 
         #get scene
         scene = bpy.context.scene
+        driveBoneName = scene.gyaz_root_motion_drive_bone
         #get first and last frame of animation
         firstFrame = scene.frame_start
         lastFrame = scene.frame_end
@@ -1236,10 +1238,15 @@ class Op_GYAZ_ExtractRootMotion_ManualBake (bpy.types.Operator):
         #jump to first frame of animation
         scene.frame_set (firstFrame)
         #bake action
-        bpy.ops.nla.bake(frame_start=firstFrame, frame_end=lastFrame, visual_keying=True, clear_constraints=True, clear_parents=True, use_current_action=True, bake_types={'POSE'})
+        bpy.ops.nla.bake(frame_start=firstFrame, frame_end=lastFrame, visual_keying=True, clear_constraints=False, clear_parents=True, use_current_action=True, bake_types={'POSE'})
         bpy.ops.nla.bake(frame_start=firstFrame, frame_end=lastFrame, visual_keying=True, clear_constraints=True, clear_parents=True, use_current_action=True, bake_types={'OBJECT'})
-
-            
+        
+        constraints = bpy.context.object.pose.bones[driveBoneName].constraints
+        
+        for c in constraints:
+            if c.name.startswith("GYAZ_root_motion"):
+                constraints.remove(c)
+        
         #clean up
         #delete empties and manual mode
         scene = bpy.context.scene
@@ -1275,22 +1282,13 @@ class Op_GYAZ_ExtractRootMotion_ManualCancel (bpy.types.Operator):
     bl_idname = "anim.extract_root_motion_manual_cancel"  
     bl_label = "Extract Root Motion: Manual Cancel"
     bl_description = "Cancel manual editing"
-    
-    ui_drive_bone: StringProperty(
-        name='Drive Bone',
-        default=prefs.bone_prefix+prefs.drive_bone,
-        description="Bone that moves the whole skeleton, e.g. hips or pelvis")
-        
-    #popup with properties
-    def invoke(self, context, event):
-        wm = bpy.context.window_manager
-        return wm.invoke_props_dialog(self)
+    bl_options = {'REGISTER', 'UNDO'}
     
     #operator function
     def execute(self, context):
         
         scene = bpy.context.scene
-        driveBone_name = self.ui_drive_bone
+        driveBone_name = bpy.context.scene.gyaz_root_motion_drive_bone
         
         root = bpy.context.object
         
@@ -1345,6 +1343,7 @@ class Op_GYAZ_ExtractRootMotion_DeleteRootAnim (bpy.types.Operator):
     bl_idname = "anim.gyaz_extract_root_motion_delete_root_anim"  
     bl_label = "Extract Root Motion: Delete Root Anim"
     bl_description = "Delete root animation (Object animation)"
+    bl_options = {'REGISTER', 'UNDO'}
     
     #operator function
     def execute(self, context):
@@ -1399,11 +1398,22 @@ class Op_GYAZ_ExtractRootMotion_CopyToBone (bpy.types.Operator):
     bl_idname = "anim.gyaz_extract_root_copy_to_bone"  
     bl_label = "Extract Root Motion: Copy To Bone"
     bl_description = "Moves extracted root motion from armature object to root bone. Root bone should be on a visible armature layer"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    ui_root_bone: StringProperty(
+            name="Root",
+            default=prefs.root_bone
+            )
+    
+    #popup with properties
+    def invoke(self, context, event):
+        wm = bpy.context.window_manager
+        return wm.invoke_props_dialog(self)
     
     #operator function
     def execute(self, context):
         
-        root_bone_name = root_bone
+        root_bone_name = self.ui_root_bone
         
         def main (root_bone_name):
             
@@ -1433,44 +1443,18 @@ class Op_GYAZ_ExtractRootMotion_CopyToBone (bpy.types.Operator):
                 #jump to first frame of animation
                 scene.frame_set (firstFrame)
                 
-                #create empty to store root motion
-                bpy.ops.object.add(type='EMPTY', location=(0, 0, 0))
-                bpy.context.active_object.name = "ERM_root_info"
-                root_info = scene.objects ["ERM_root_info"]
+                root_info = bpy.data.objects.new(object_data=None, name="ERM_root_info")
+                bpy.context.scene.collection.objects.link(root_info)
 
-                #initial position
-                c = root_info.constraints.new ('COPY_TRANSFORMS')
+                c = root_info.constraints.new ("COPY_TRANSFORMS")
                 c.target = root
-
-                #apply visual transform
-                bpy.ops.object.mode_set (mode='OBJECT')
-                bpy.ops.object.select_all (action='DESELECT')
-                root_info.select_set (True)
-                bpy.context.view_layer.objects.active = scene.objects[root_info.name]
-
-                bpy.ops.object.visual_transform_apply ()
-
-                root_info.constraints.remove (c)
-                
-                #parent it to root
-                c = root_info.constraints.new ('CHILD_OF')
-                c.target = root        
-                
-                #set inverse matrix
-                context_copy = bpy.context.copy()
-                context_copy["constraint"] = root_info.constraints["Child Of"]
-                bpy.ops.constraint.childof_set_inverse(context_copy, constraint=c.name, owner='OBJECT')
-                #update
-                scene.frame_set (scene.frame_current + 1)
-                scene.frame_set (scene.frame_current - 1)
                 
                 #bake root info
+                select_only(root_info)
                 bpy.ops.nla.bake(frame_start=firstFrame, frame_end=lastFrame, visual_keying=True, clear_constraints=True, clear_parents=True, use_current_action=True, bake_types={'OBJECT'})
                 
                 #delete root motion from armature object:
-                bpy.ops.object.select_all (action='DESELECT')
-                root.select_set (True)
-                bpy.context.view_layer.objects.active = root            
+                select_only(root)            
                 
                 #get active action's name
                 obj = bpy.context.object
@@ -1497,11 +1481,8 @@ class Op_GYAZ_ExtractRootMotion_CopyToBone (bpy.types.Operator):
                 
                 #bake root bone
                 bpy.ops.nla.bake(frame_start=firstFrame, frame_end=lastFrame+1, visual_keying=True, clear_constraints=True, clear_parents=True, use_current_action=True, bake_types={'POSE'})
-
-                bpy.ops.object.mode_set(mode = 'OBJECT')
-                bpy.ops.object.select_all(action='DESELECT')
-                root.select_set (True)
-                bpy.context.view_layer.objects.active = root
+                
+                bpy.ops.object.mode_set (mode='OBJECT')
                             
                 #delete empty (root_info)
                 root_info.user_clear ()
@@ -1526,6 +1507,9 @@ class VIEW3D_PT_GYAZ_ExtractRootMotion (Panel):
     def draw (self, context):
         scene = bpy.context.scene
         lay = self.layout   
+        col = lay.column(align=True)
+        col.label(text="Drive Bone:")
+        col.prop(bpy.context.scene, "gyaz_root_motion_drive_bone", text="")
         col = lay.column(align=True)
         col.label(text="Auto:")
         row = col.row(align=True)
@@ -1555,6 +1539,12 @@ class VIEW3D_PT_GYAZ_ExtractRootMotion (Panel):
 #everything should be registeres here
 
 def register():  
+    
+    Scene.gyaz_root_motion_drive_bone = StringProperty(
+        name="Drive Bone", 
+        default=prefs.drive_bone,
+        description="Bone that moves the whole skeleton, e.g. hips or pelvis")
+    
     bpy.utils.register_class (Op_GYAZ_ExtractRootMotion_Visualize) 
     bpy.utils.register_class (Op_GYAZ_ExtractRootMotion_Base)    
     bpy.utils.register_class (Op_GYAZ_ExtractRootMotion_locZ)
@@ -1567,7 +1557,8 @@ def register():
     bpy.utils.register_class (VIEW3D_PT_GYAZ_ExtractRootMotion)
     
 
-def unregister ():    
+def unregister ():
+        
     bpy.utils.unregister_class (Op_GYAZ_ExtractRootMotion_Visualize) 
     bpy.utils.unregister_class (Op_GYAZ_ExtractRootMotion_Base) 
     bpy.utils.unregister_class (Op_GYAZ_ExtractRootMotion_locZ)
@@ -1578,7 +1569,8 @@ def unregister ():
     bpy.utils.unregister_class (Op_GYAZ_ExtractRootMotion_CopyToBone) 
     
     bpy.utils.unregister_class (VIEW3D_PT_GYAZ_ExtractRootMotion) 
-
+    
+    del Scene.drive_bone
   
 if __name__ == "__main__":   
     register()      

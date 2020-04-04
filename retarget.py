@@ -35,6 +35,7 @@ class Op_GYAZ_RetargetAnimation (bpy.types.Operator):
     bl_idname = "anim.gyaz_retarget"  
     bl_label = "Anim: Retarget"
     bl_description = "Selected: source (from) armature, active: target (to) armature"
+    bl_options = {'REGISTER', 'UNDO'}
     
     location_bones: StringProperty (default=prefs.location_bones, name='Location Bones', description='E.g.: hips, some_other_bone')
     halve_frame_rate: BoolProperty (default=prefs.halve_frame_rate, name='Halve Frame Rate')
@@ -184,8 +185,20 @@ class Op_GYAZ_RetargetAnimation (bpy.types.Operator):
                                 
                                 # bake
                                 bpy.ops.object.mode_set (mode='POSE')
-                                bpy.ops.nla.bake(frame_start=first_frame, frame_end=last_frame, only_selected=True, visual_keying=True, clear_constraints=True, clear_parents=False, use_current_action=False, bake_types={'POSE'})
-                            
+                                bpy.ops.nla.bake(frame_start=first_frame, frame_end=last_frame, only_selected=True, visual_keying=True, clear_constraints=False, clear_parents=False, use_current_action=False, bake_types={'POSE'})
+                                
+                                # clear constraints
+                                pbones = rig.pose.bones
+                                for name in source_bone_names:
+                                    if self.use_target_bone_prefix == True:
+                                        pbone = pbones[self.target_bone_prefix + name]
+                                    else:
+                                        pbone = pbones[name]
+                                    
+                                    for c in pbone.constraints:
+                                        if c.name.startswith("GYAZ_retarget"):
+                                            pbone.constraints.remove(c)
+                                
                                 # correct loc anim
                                 if self.correct_loc_keys:
                                     
@@ -219,6 +232,25 @@ class Op_GYAZ_RetargetAnimation (bpy.types.Operator):
                                               
         return {'FINISHED'}
 
+
+class VIEW3D_PT_GYAZ_Animation (Panel):
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'AnimTools'
+    bl_label = 'Animation'    
+    
+    #add ui elements here
+    def draw (self, context):
+        lay = self.layout
+        col = lay.column (align=True)
+        col.operator ('nla.bake')
+        col.operator ('anim.gyaz_retarget', text='Retarget')
+
+    #when the buttons should show up    
+    @classmethod
+    def poll(cls, context):
+        return bpy.context.object is not None and (bpy.context.mode == 'OBJECT' or bpy.context.mode == 'POSE')
+
     
 #######################################################
 #######################################################
@@ -226,11 +258,13 @@ class Op_GYAZ_RetargetAnimation (bpy.types.Operator):
 #REGISTER
 
 def register():
-    bpy.utils.register_class (Op_GYAZ_RetargetAnimation)                                                       
+    bpy.utils.register_class (Op_GYAZ_RetargetAnimation)  
+    bpy.utils.register_class (VIEW3D_PT_GYAZ_Animation)                                                     
    
 
 def unregister ():
     bpy.utils.unregister_class (Op_GYAZ_RetargetAnimation)
+    bpy.utils.unregister_class (VIEW3D_PT_GYAZ_Animation)
 
   
 if __name__ == "__main__":   
