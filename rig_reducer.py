@@ -342,13 +342,15 @@ class VIEW3D_PT_GYAZ_ReduceRig (Panel):
     def draw (self, context):
         scene = bpy.context.scene        
         lay = self.layout
-        lay.label (text='Presets:')
-        row = lay.row (align=True)
+        col = lay.column()
+        col.label (text='Presets:')
+        row = col.row (align=True)
         row.prop (scene.gyaz_reduce_rig, "active_preset", text='')
         row.operator (Op_GYAZ_ReduceRig_SavePreset.bl_idname, text='', icon='ADD')
         row.operator (Op_GYAZ_ReduceRig_ClearPreset.bl_idname, text='', icon='REMOVE')
-        lay.label (text='Remove Bones:')
-        row = lay.row (align=True)
+        col = lay.column()
+        col.label (text='Remove Bones:')
+        row = col.row (align=True)
         row.scale_x = 2
         row.operator (Op_GYAZ_ReduceRig_Functions.bl_idname, text='', icon='ADD').ui_mode = 'ADD'
         row.operator (Op_GYAZ_ReduceRig_Functions.bl_idname, text='', icon='X').ui_mode = 'REMOVE_ALL'

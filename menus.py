@@ -195,7 +195,6 @@ class VIEW3D_MT_GYAZ_AnimTools (Menu):
         lay.operator_context = 'INVOKE_REGION_WIN'
         lay.operator ("anim.gyaz_offset_anim", text='Offset Global').Mode='GLOBAL'
         lay.operator ("anim.gyaz_offset_anim", text='Offset Local').Mode='SIMPLE_LOCAL'
-        lay.separator ()
         lay.operator ("anim.gyaz_offset_anim", text='Offset Local 2').Mode='LOCAL_2'
         lay.operator ("anim.gyaz_offset_anim", text='Offset Local 4').Mode='LOCAL_4'
         lay.separator ()
@@ -209,16 +208,13 @@ class VIEW3D_MT_GYAZ_AnimTools (Menu):
         lay.separator ()
         
         lay.operator_context = 'INVOKE_REGION_WIN'
-        lay.operator ('anim.gyaz_extract_root_motion_base', text="Auto Root Motion: Base")
-        lay.operator ('anim.gyaz_extract_root_motion_loc_z', text="Auto Root Motion: Loc Z")
-        lay.separator ()
-        lay.operator('anim.gyaz_extract_root_motion_manual', text="Manual Root Motion: Start")
-        lay.operator('anim.extract_root_motion_manual_cancel', text="Manual Root Motion: Cancel", icon='PANEL_CLOSE')
-        lay.operator('anim.gyaz_extract_root_motion_bake_manual', text="Manual Root Motion: Bake", icon='FILE_TICK')
+        lay.operator('anim.gyaz_extract_root_motion_manual', text="Extract Root Motion: Start")
+        lay.operator('anim.extract_root_motion_manual_cancel', text="Extract Root Motion: Cancel", icon='PANEL_CLOSE')
+        lay.operator('anim.gyaz_extract_root_motion_bake_manual', text="Extract Root Motion: Bake", icon='FILE_TICK')
         lay.separator ()
         lay.operator ('anim.gyaz_extract_root_motion_visualize', text='Visualize Root Motion')
-        lay.operator('anim.gyaz_extract_root_motion_delete_root_anim', text="Delete Root Anim")
-        lay.operator ('anim.gyaz_extract_root_copy_to_bone', text="Move Root Anim To Root Bone")
+        lay.operator('anim.gyaz_extract_root_motion_delete_root_motion', text="Delete Root Motion")
+        lay.operator ('anim.gyaz_extract_root_copy_to_bone', text="Move to Root Bone")
         lay.separator ()
         lay.operator ('nla.bake')
         lay.operator ('anim.gyaz_retarget', text='Retarget')
