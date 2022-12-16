@@ -137,51 +137,18 @@ class Op_GYAZ_SetupIKConstraint (Operator):
         return {'FINISHED'}
 
 
-class PG_GYAZ_SetPoleAngle (PropertyGroup):
+class PG_GYAZ_SetupIKConstraint (PropertyGroup):
     base_bone: StringProperty (name='Base Bone', default='', description='E.g.: upperarm, thigh')
     constraint_bone: StringProperty (name='Constraint Bone', default='', description='E.g.: forearm, shin')
     ik_bone: StringProperty (name='IK Target Bone', default='', description='E.g.: ik_hand, ik_foot')
     pole_bone: StringProperty (name='Pole Target Bone', default='', description='E.g.: target_elbow, target_knee')
     
-    
-class DATA_PT_GYAZ_SetPoleAngle (Panel):
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context = 'data'
-    bl_label = 'Setup IK Constraint'
-    bl_options = {'DEFAULT_CLOSED'}
-    
-    #add ui elements here
-    def draw (self, context):
-        lay = self.layout
-        rig = bpy.context.object.data
-        scene = bpy.context.scene
-        owner = scene.gyaz_set_pole_angle
-        row = lay.row (align=True)
-        row.prop_search (owner, 'base_bone', rig, 'bones')
-        row.operator (Op_GYAZ_SetupIKConstraint_GetActiveBone.bl_idname, text='', icon='EYEDROPPER').prop_name='base_bone'
-        row = lay.row (align=True)
-        row.prop_search (owner, 'constraint_bone', rig, 'bones')
-        row.operator (Op_GYAZ_SetupIKConstraint_GetActiveBone.bl_idname, text='', icon='EYEDROPPER').prop_name='constraint_bone'
-        row = lay.row (align=True)
-        row.prop_search (owner, 'ik_bone', rig, 'bones')
-        row.operator (Op_GYAZ_SetupIKConstraint_GetActiveBone.bl_idname, text='', icon='EYEDROPPER').prop_name='ik_bone'
-        row = lay.row (align=True)
-        row.prop_search (owner, 'pole_bone', rig, 'bones')
-        row.operator (Op_GYAZ_SetupIKConstraint_GetActiveBone.bl_idname, text='', icon='EYEDROPPER').prop_name='pole_bone'
-        lay.operator (Op_GYAZ_SetupIKConstraint.bl_idname)
-         
-    #when the buttons should show up    
-    @classmethod
-    def poll(cls, context):
-        obj = bpy.context.object
-        return obj is not None and (context.mode == 'OBJECT' or context.mode == 'POSE') and context.armature
-    
 
 class Op_GYAZ_AdjustActiveArmatureToSelected (Operator):
        
     bl_idname = "object.adjust_active_armature_to_selected"  
-    bl_label = "Adjust Active Armature to Selected"
+    bl_label = "Adjust Armature"
+    bl_description = "Adjust Active Armature to Selected"
     bl_options = {'REGISTER', 'UNDO'}
     
     #operator function
@@ -223,35 +190,94 @@ class Op_GYAZ_AdjustActiveArmatureToSelected (Operator):
         else:
             return False
 
+
+class VIEW3D_PT_GYAZ_RiggingTools (Panel):
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_label = 'Rigging'
+    bl_category = 'Animation'
+    
+    #add ui elements here
+    def draw (self, context):
+        scene = bpy.context.scene
+        lay = self.layout   
+        
+        col = lay.column(align=True)
+        row = col.row(align=True)
+        row.operator (Op_GYAZ_AdjustActiveArmatureToSelected.bl_idname, text = "Adjust Armature")
+    
+    #when the buttons should show up    
+    @classmethod
+    def poll(cls, context):
+        ao = context.active_object
+        if ao != None:
+            return context.mode == 'OBJECT' and bpy.context.object.type == 'ARMATURE'
+
+
+class VIEW3D_PT_GYAZ_SetupIKConstraint (Panel):
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_label = 'Setup IK Constraint'
+    bl_category = 'Animation'
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    #add ui elements here
+    def draw (self, context):
+        lay = self.layout
+        rig = bpy.context.object.data
+        scene = bpy.context.scene
+        owner = scene.gyaz_set_pole_angle
+        row = lay.row (align=True)
+        row.prop_search (owner, 'base_bone', rig, 'bones')
+        row.operator (Op_GYAZ_SetupIKConstraint_GetActiveBone.bl_idname, text='', icon='EYEDROPPER').prop_name='base_bone'
+        row = lay.row (align=True)
+        row.prop_search (owner, 'constraint_bone', rig, 'bones')
+        row.operator (Op_GYAZ_SetupIKConstraint_GetActiveBone.bl_idname, text='', icon='EYEDROPPER').prop_name='constraint_bone'
+        row = lay.row (align=True)
+        row.prop_search (owner, 'ik_bone', rig, 'bones')
+        row.operator (Op_GYAZ_SetupIKConstraint_GetActiveBone.bl_idname, text='', icon='EYEDROPPER').prop_name='ik_bone'
+        row = lay.row (align=True)
+        row.prop_search (owner, 'pole_bone', rig, 'bones')
+        row.operator (Op_GYAZ_SetupIKConstraint_GetActiveBone.bl_idname, text='', icon='EYEDROPPER').prop_name='pole_bone'
+        lay.operator (Op_GYAZ_SetupIKConstraint.bl_idname)
+         
+    #when the buttons should show up    
+    @classmethod
+    def poll(cls, context):
+        obj = bpy.context.object
+        return obj is not None and obj.type == 'ARMATURE' and (context.mode == 'OBJECT' or context.mode == 'POSE')
+
 #######################################################
 #######################################################
 
 #REGISTER
-#everything should be registeres here
 
 def register():
     
-    bpy.utils.register_class (PG_GYAZ_SetPoleAngle)
-    Scene.gyaz_set_pole_angle = PointerProperty (type=PG_GYAZ_SetPoleAngle)
+    bpy.utils.register_class (PG_GYAZ_SetupIKConstraint)
+    Scene.gyaz_set_pole_angle = PointerProperty (type=PG_GYAZ_SetupIKConstraint)
     
     bpy.utils.register_class (Op_GYAZ_SetupIKConstraint)
     bpy.utils.register_class (Op_GYAZ_SetupIKConstraint_GetActiveBone)
-    bpy.utils.register_class (DATA_PT_GYAZ_SetPoleAngle) 
     
     bpy.utils.register_class (Op_GYAZ_AdjustActiveArmatureToSelected) 
+
+    bpy.utils.register_class (VIEW3D_PT_GYAZ_RiggingTools)
+    bpy.utils.register_class (VIEW3D_PT_GYAZ_SetupIKConstraint) 
     
 
 def unregister ():
         
     bpy.utils.unregister_class (Op_GYAZ_SetupIKConstraint)
     bpy.utils.unregister_class (Op_GYAZ_SetupIKConstraint_GetActiveBone)
-    bpy.utils.unregister_class (DATA_PT_GYAZ_SetPoleAngle)
     
     bpy.utils.unregister_class (Op_GYAZ_AdjustActiveArmatureToSelected)
     
     del Scene.gyaz_set_pole_angle     
-    bpy.utils.unregister_class (PG_GYAZ_SetPoleAngle)
+    bpy.utils.unregister_class (PG_GYAZ_SetupIKConstraint)
     
+    bpy.utils.unregister_class (VIEW3D_PT_GYAZ_RiggingTools)
+    bpy.utils.unregister_class (VIEW3D_PT_GYAZ_SetupIKConstraint)
 
 
 if __name__ == "__main__":   

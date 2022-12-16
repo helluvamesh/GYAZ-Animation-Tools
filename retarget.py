@@ -30,6 +30,7 @@ from .utils import list_to_visual_list
 
 prefs = bpy.context.preferences.addons[__package__].preferences
 
+
 class Op_GYAZ_RetargetAnimation (bpy.types.Operator):
        
     bl_idname = "anim.gyaz_retarget"  
@@ -112,6 +113,8 @@ class Op_GYAZ_RetargetAnimation (bpy.types.Operator):
                             
                             # get first and last frame of action
                             first_frame, last_frame = action.frame_range
+                            first_frame = int(first_frame)
+                            last_frame = int(last_frame)
                             scene.frame_start = first_frame
                             scene.frame_end = last_frame
                             scene.frame_set (first_frame)
@@ -236,7 +239,7 @@ class Op_GYAZ_RetargetAnimation (bpy.types.Operator):
 class VIEW3D_PT_GYAZ_Animation (Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'AnimTools'
+    bl_category = 'Animation'
     bl_label = 'Animation'    
     
     #add ui elements here

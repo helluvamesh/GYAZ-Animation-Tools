@@ -19,8 +19,8 @@
 bl_info = {   
  "name": "GYAZ Animation Tools",   
  "author": "Andras Gyalog",   
- "version": (2, 82, 0),   
- "blender": (2, 82, 0),   
+ "version": (3, 4, 0),   
+ "blender": (3, 4, 0),   
  "location": "",   
  "description": "Various animation tools",
  "warning": "",   
@@ -202,7 +202,7 @@ def unregister():
 register()
 
  
-modulesNames = ['offset_animation', 'root_motion_tools', 'retarget', 'rig_reducer', 'weight_paint', 'rigging', 'menus', 'shortcuts']
+modulesNames = ['offset_animation', 'root_motion_tools', 'retarget', 'weight_paint', 'rigging', 'rig_reducer', 'menus', 'shortcuts']
  
 import sys
 import importlib

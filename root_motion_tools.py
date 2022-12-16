@@ -28,13 +28,7 @@ from .utils import select_only
 from bpy.types import Scene
 
 
-#bones
 prefs = bpy.context.preferences.addons[__package__].preferences
-
-#drive_bone = prefs.bone_prefix+prefs.drive_bone
-root_bone = prefs.root_bone
-#left_toe = prefs.bone_prefix+prefs.toes+prefs.bone_left_suffix
-#right_toe = prefs.bone_prefix+prefs.toes+prefs.bone_right_suffix
 
 
 def clear_transformation (object):
@@ -127,69 +121,72 @@ class Op_GYAZ_ExtractRootMotion_Visualize (bpy.types.Operator):
     bl_label = "Extract Root Motion: Visualize"
     bl_description = "Append capsule and arrow and parent them to armauture object"
     bl_options = {'REGISTER', 'UNDO'}
-
+    
+    remove: BoolProperty()
     
     #operator function
     def execute(self, context):
         
-        def main (obj_name):
-        
-            bpy.ops.object.mode_set (mode='OBJECT')
-            
-            filepath = os.path.dirname(__file__) + "/animation_tools_props.blend"
-            
-            # append, set to true to keep the link to the original file
-            link = False
-            # link all objects starting with 'obj_name'
-            with bpy.data.libraries.load(filepath, link=link) as (data_from, data_to):
-                data_to.objects = [name for name in data_from.objects if name.endswith(obj_name)]
-            
-            scene = bpy.context.scene
-            root = bpy.context.active_object
-            
-            #get Unit Scale
-            uSystem= scene.unit_settings.system
-            uScale = scene.unit_settings.scale_length
-            newScale = 1/uScale
-
-
-            bpy.ops.object.select_all(action='DESELECT')
-            #link object to current scene with correct scale
-            for obj in data_to.objects:
-                if obj is not None:
-                    #link
-                    scene.collection.objects.link (obj)
-                    #set scale
-                    obj['original_scale'] = obj.scale
-                    oriScale = obj['original_scale']
-                    obj.select_set (True)
-                    bpy.context.view_layer.objects.active = obj
-                    bpy.ops.object.scale_clear()
-                    obj.scale[0] = obj.scale[1]*newScale*oriScale[0]
-                    obj.scale[1] = obj.scale[1]*newScale*oriScale[1]
-                    obj.scale[2] = obj.scale[2]*newScale*oriScale[2]
-                    
-                    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-                    
-                    del obj['original_scale']
-                    obj.parent = root
-                    bpy.ops.object.select_all(action='DESELECT')    
-            
-            
-            root.select_set (True)
-            bpy.context.view_layer.objects.active = root
-        
-        has_ob = False
-        obj_name = "capsule_ERM"
+        bpy.ops.object.mode_set (mode='OBJECT')
         root = bpy.context.active_object
-        children = root.children
-        for child in children:
-            if bpy.data.objects.get(child.name) is not None:
-                if child.name.startswith (obj_name) == True:
-                    popup (["You already have a capsule parented to your armature."], "INFO")
-                    has_ob = True
-        if has_ob == False:
-            main (obj_name)
+        capsule_name = "capsule_ERM"
+        scene = bpy.context.scene
+        
+        if (self.remove == False):
+            
+            capsule_found = False
+            for child in root.children:
+                if bpy.data.objects.get(child.name) is not None:
+                    if child.name.startswith (capsule_name) == True:
+                        popup (["You already have a capsule parented to your armature."], "INFO")
+                        capsule_found = True
+                        
+            if capsule_found == False:
+                            
+                filepath = os.path.dirname(__file__) + "/animation_tools_props.blend"
+                
+                # append, set to true to keep the link to the original file
+                link = False
+                # link capsule
+                with bpy.data.libraries.load(filepath, link=link) as (data_from, data_to):
+                    data_to.objects = [name for name in data_from.objects if name.endswith(capsule_name)]
+                
+                #get Unit Scale
+                uSystem = scene.unit_settings.system
+                uScale = scene.unit_settings.scale_length
+                newScale = 1/uScale
+
+                bpy.ops.object.select_all(action='DESELECT')
+                #link object to current scene with correct scale
+                for obj in data_to.objects:
+                    if obj is not None:
+                        #link
+                        scene.collection.objects.link (obj)
+                        #set scale
+                        obj['original_scale'] = obj.scale
+                        oriScale = obj['original_scale']
+                        obj.select_set (True)
+                        bpy.context.view_layer.objects.active = obj
+                        bpy.ops.object.scale_clear()
+                        obj.scale[0] = obj.scale[1]*newScale*oriScale[0]
+                        obj.scale[1] = obj.scale[1]*newScale*oriScale[1]
+                        obj.scale[2] = obj.scale[2]*newScale*oriScale[2]
+                        
+                        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+                        
+                        del obj['original_scale']
+                        obj.parent = root
+                        bpy.ops.object.select_all(action='DESELECT')    
+                
+                root.select_set (True)
+                bpy.context.view_layer.objects.active = root
+        
+        else: # remove
+            
+            for obj in root.children:
+                if obj.name.startswith(capsule_name):
+                    obj.user_clear()
+                    bpy.data.objects.remove(obj)
         
         
         #end of operator
@@ -270,7 +267,7 @@ class Op_GYAZ_ExtractRootMotion_Manual (bpy.types.Operator):
             
             #set active keying set to LocRot
             ks = scene.keying_sets_all
-            ks.active = ks["LocRot"]
+            ks.active = ks["Location & Rotation"]
             
             
             #PREVIOUSLY EXTRACTED ROOT MOTION DATA
@@ -692,8 +689,6 @@ class Op_GYAZ_ExtractRootMotion_CopyToBone (bpy.types.Operator):
                 
                 root = bpy.context.active_object
                 
-                root_bone_name = root_bone
-                
                 #get scene
                 scene = bpy.context.scene
                 #get first and last frame of animation
@@ -750,7 +745,7 @@ class Op_GYAZ_ExtractRootMotion_CopyToBone (bpy.types.Operator):
 
                
         #check for drive bone                
-        safety_check_1 (main, root_bone, True)      
+        safety_check_1 (main, root_bone_name, True)
 
         
         #end of operator
@@ -761,22 +756,28 @@ class VIEW3D_PT_GYAZ_ExtractRootMotion (Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_label = 'Extract Root Motion'
-    bl_category = 'AnimTools'
+    bl_category = 'Animation'
     
     #add ui elements here
     def draw (self, context):
         scene = bpy.context.scene
         lay = self.layout   
+        
         col = lay.column(align=True)
         col.label(text="Drive Bone:")
         col.prop(bpy.context.scene, "gyaz_root_motion_drive_bone", text="")
+        
         col = lay.column(align=True)
+        col.label(text="Extract:")
         row = col.row(align=True)
         row.operator(Op_GYAZ_ExtractRootMotion_Manual.bl_idname, text = "Start")
         row.operator(Op_GYAZ_ExtractRootMotion_ManualCancel.bl_idname, text="Cancel", icon='PANEL_CLOSE')
         col.operator(Op_GYAZ_ExtractRootMotion_ManualBake.bl_idname, text="Bake", icon='FILE_TICK')
+        
         col = lay.column(align=True)
-        col.operator (Op_GYAZ_ExtractRootMotion_Visualize.bl_idname, text = 'Visualize')
+        row = col.row(align=True)
+        row.operator (Op_GYAZ_ExtractRootMotion_Visualize.bl_idname, text = "Visualize").remove = False
+        row.operator (Op_GYAZ_ExtractRootMotion_Visualize.bl_idname, text = "Remove").remove = True
         col.operator(Op_GYAZ_ExtractRootMotion_DeleteRootMotion.bl_idname, text="Delete Root Motion")
         col.operator (Op_GYAZ_ExtractRootMotion_CopyToBone.bl_idname, text = "Move to Root Bone")
     
@@ -789,7 +790,6 @@ class VIEW3D_PT_GYAZ_ExtractRootMotion (Panel):
 
 
 #REGISTER
-#everything should be registeres here
 
 def register():  
     

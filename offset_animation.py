@@ -89,40 +89,32 @@ class Op_GYAZ_OffsetAnim (bpy.types.Operator):
             
             # Assign a collection
             class VectorPropertyItem(bpy.types.PropertyGroup):
-                value = bpy.props.FloatVectorProperty()
+                value: bpy.props.FloatVectorProperty()
 
             bpy.utils.register_class(VectorPropertyItem)
             
             class QuaternionPropertyItem(bpy.types.PropertyGroup):
-                value = bpy.props.FloatVectorProperty(size=4)
+                value: bpy.props.FloatVectorProperty(size=4)
 
             bpy.utils.register_class(QuaternionPropertyItem)
             
             #offseted transform
-            bpy.types.Scene.OffLocs = \
-                bpy.props.CollectionProperty(type=VectorPropertyItem)
+            bpy.types.Scene.GYAZ_OffLocs = bpy.props.CollectionProperty(type=VectorPropertyItem)
 
-            bpy.types.Scene.OffRotsQ = \
-                bpy.props.CollectionProperty(type=QuaternionPropertyItem)
+            bpy.types.Scene.GYAZ_OffRotsQ = bpy.props.CollectionProperty(type=QuaternionPropertyItem)
             
-            bpy.types.Scene.OffRotsE = \
-                bpy.props.CollectionProperty(type=VectorPropertyItem)        
+            bpy.types.Scene.GYAZ_OffRotsE = bpy.props.CollectionProperty(type=VectorPropertyItem)        
 
-            bpy.types.Scene.OffSca = \
-                bpy.props.CollectionProperty(type=VectorPropertyItem)
+            bpy.types.Scene.GYAZ_OffSca = bpy.props.CollectionProperty(type=VectorPropertyItem)
                     
             #transform difference 
-            bpy.types.Scene.DiffLocs = \
-                bpy.props.CollectionProperty(type=VectorPropertyItem)
+            bpy.types.Scene.GYAZ_DiffLocs = bpy.props.CollectionProperty(type=VectorPropertyItem)
 
-            bpy.types.Scene.DiffRotsQ = \
-                bpy.props.CollectionProperty(type=QuaternionPropertyItem)
+            bpy.types.Scene.GYAZ_DiffRotsQ = bpy.props.CollectionProperty(type=QuaternionPropertyItem)
             
-            bpy.types.Scene.DiffRotsE = \
-                bpy.props.CollectionProperty(type=VectorPropertyItem)        
+            bpy.types.Scene.GYAZ_DiffRotsE = bpy.props.CollectionProperty(type=VectorPropertyItem)        
 
-            bpy.types.Scene.DiffScas = \
-                bpy.props.CollectionProperty(type=VectorPropertyItem)
+            bpy.types.Scene.GYAZ_DiffScas = bpy.props.CollectionProperty(type=VectorPropertyItem)
             
             scene = context.scene
             
@@ -144,15 +136,15 @@ class Op_GYAZ_OffsetAnim (bpy.types.Operator):
             first_frame = scene.frame_start
             last_frame = scene.frame_end
             
-            OffLocs = scene.OffLocs
-            OffRotsQ = scene.OffRotsQ
-            OffRotsE = scene.OffRotsE
-            OffScas = scene.OffSca
+            OffLocs = scene.GYAZ_OffLocs
+            OffRotsQ = scene.GYAZ_OffRotsQ
+            OffRotsE = scene.GYAZ_OffRotsE
+            OffScas = scene.GYAZ_OffSca
             
-            DiffLocs = scene.DiffLocs
-            DiffRotsQ = scene.DiffRotsQ
-            DiffRotsE = scene.DiffRotsE
-            DiffScas = scene.DiffScas
+            DiffLocs = scene.GYAZ_DiffLocs
+            DiffRotsQ = scene.GYAZ_DiffRotsQ
+            DiffRotsE = scene.GYAZ_DiffRotsE
+            DiffScas = scene.GYAZ_DiffScas
             
             #markers
             markers = scene.timeline_markers
@@ -552,7 +544,7 @@ class VIEW3D_PT_GYAZ_OffsetAnimation (Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_label = 'Offset Animaion'
-    bl_category = 'AnimTools'
+    bl_category = 'Animation'
     
     #add ui elements here
     def draw (self, context):
@@ -592,7 +584,6 @@ class VIEW3D_PT_GYAZ_OffsetAnimation (Panel):
 #######################################################
 
 #REGISTER
-#everything should be registeres here
 
 def register():
     

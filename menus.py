@@ -231,7 +231,6 @@ class VIEW3D_MT_GYAZ_AnimTools (Menu):
 #######################################################
 
 #REGISTER
-#everything should be registeres here
 
 def register():
         

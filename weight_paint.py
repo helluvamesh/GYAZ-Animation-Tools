@@ -85,7 +85,6 @@ class Op_GYAZ_CopyMirrorVertexGroup (Operator):
 #######################################################
 
 #REGISTER
-#everything should be registeres here
 
 def register():
 

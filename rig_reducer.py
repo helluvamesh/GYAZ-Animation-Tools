@@ -335,8 +335,9 @@ class Op_GYAZ_ReduceRig_MergeWeightsAndRemoveBones (bpy.types.Operator):
 class VIEW3D_PT_GYAZ_ReduceRig (Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'AnimTools'
-    bl_label = 'Reduce Rig'    
+    bl_category = 'Animation'
+    bl_label = 'Reduce Rig' 
+    bl_options = {'DEFAULT_CLOSED'}   
     
     #add ui elements here
     def draw (self, context):
