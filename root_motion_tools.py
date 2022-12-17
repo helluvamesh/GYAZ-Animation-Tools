@@ -25,6 +25,7 @@ import bpy
 from .utils import popup_lines as popup
 from .utils import popup as popup_single
 from .utils import select_only
+from .utils import deselect_all_bones
 from bpy.types import Scene
 
 
@@ -112,86 +113,7 @@ def safety_check_2 (main, bone_name, bone_name_1, bone_name_2, bone_name_in_main
 ##############################################
 ##############################################
 
-#OPERATORS    
-
-#EXTRACT ROOT MOTION: VISUALIZE
-class Op_GYAZ_ExtractRootMotion_Visualize (bpy.types.Operator):
-       
-    bl_idname = "anim.gyaz_extract_root_motion_visualize"  
-    bl_label = "Extract Root Motion: Visualize"
-    bl_description = "Append capsule and arrow and parent them to armauture object"
-    bl_options = {'REGISTER', 'UNDO'}
-    
-    remove: BoolProperty()
-    
-    #operator function
-    def execute(self, context):
-        
-        bpy.ops.object.mode_set (mode='OBJECT')
-        root = bpy.context.active_object
-        capsule_name = "capsule_ERM"
-        scene = bpy.context.scene
-        
-        if (self.remove == False):
-            
-            capsule_found = False
-            for child in root.children:
-                if bpy.data.objects.get(child.name) is not None:
-                    if child.name.startswith (capsule_name) == True:
-                        popup (["You already have a capsule parented to your armature."], "INFO")
-                        capsule_found = True
-                        
-            if capsule_found == False:
-                            
-                filepath = os.path.dirname(__file__) + "/animation_tools_props.blend"
-                
-                # append, set to true to keep the link to the original file
-                link = False
-                # link capsule
-                with bpy.data.libraries.load(filepath, link=link) as (data_from, data_to):
-                    data_to.objects = [name for name in data_from.objects if name.endswith(capsule_name)]
-                
-                #get Unit Scale
-                uSystem = scene.unit_settings.system
-                uScale = scene.unit_settings.scale_length
-                newScale = 1/uScale
-
-                bpy.ops.object.select_all(action='DESELECT')
-                #link object to current scene with correct scale
-                for obj in data_to.objects:
-                    if obj is not None:
-                        #link
-                        scene.collection.objects.link (obj)
-                        #set scale
-                        obj['original_scale'] = obj.scale
-                        oriScale = obj['original_scale']
-                        obj.select_set (True)
-                        bpy.context.view_layer.objects.active = obj
-                        bpy.ops.object.scale_clear()
-                        obj.scale[0] = obj.scale[1]*newScale*oriScale[0]
-                        obj.scale[1] = obj.scale[1]*newScale*oriScale[1]
-                        obj.scale[2] = obj.scale[2]*newScale*oriScale[2]
-                        
-                        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-                        
-                        del obj['original_scale']
-                        obj.parent = root
-                        bpy.ops.object.select_all(action='DESELECT')    
-                
-                root.select_set (True)
-                bpy.context.view_layer.objects.active = root
-        
-        else: # remove
-            
-            for obj in root.children:
-                if obj.name.startswith(capsule_name):
-                    obj.user_clear()
-                    bpy.data.objects.remove(obj)
-        
-        
-        #end of operator
-        return {'FINISHED'}
-    
+#OPERATORS 
 
 #EXTRACT ROOT MOTION: MANUAL
 class Op_GYAZ_ExtractRootMotion_Manual (bpy.types.Operator):
@@ -229,6 +151,7 @@ class Op_GYAZ_ExtractRootMotion_Manual (bpy.types.Operator):
         
         scene = bpy.context.scene
         driveBone_name = scene.gyaz_root_motion_drive_bone
+        rootBone_name = scene.gyaz_root_motion_root_bone
         
         bake_previous_data = self.ui_modes
         
@@ -251,8 +174,6 @@ class Op_GYAZ_ExtractRootMotion_Manual (bpy.types.Operator):
             armatureData = root.data
             #define driveBone (returns Bone)
             driveBone = root.data.bones[driveBone_name]
-            #define driveBone as pose bone
-            driveBone_pb = bpy.data.objects[root.name].pose.bones[driveBone.name]
             
             bpy.ops.object.mode_set (mode='OBJECT')
             
@@ -284,6 +205,7 @@ class Op_GYAZ_ExtractRootMotion_Manual (bpy.types.Operator):
                 #constraint empty to armature object
                 c = previous_data.constraints.new ('COPY_LOCATION')
                 c.target = root
+                c.subtarget = rootBone_name
                 c.use_offset = False
                 c.use_x = True
                 c.use_y = True
@@ -293,6 +215,7 @@ class Op_GYAZ_ExtractRootMotion_Manual (bpy.types.Operator):
                 
                 c = previous_data.constraints.new ('COPY_ROTATION')
                 c.target = root
+                c.subtarget = rootBone_name
                 c.use_offset = False
                 c.use_x = True
                 c.use_y = True
@@ -378,8 +301,9 @@ class Op_GYAZ_ExtractRootMotion_Manual (bpy.types.Operator):
             bpy.ops.object.select_all(action='DESELECT')
             root.select_set (True)
             bpy.context.view_layer.objects.active = root
+            root_pbone = root.pose.bones[rootBone_name]
             #add Copy Location constraint to root, target: empty_dynamic
-            c = root.constraints.new (type = 'COPY_LOCATION')
+            c = root_pbone.constraints.new (type = 'COPY_LOCATION')
             c.target = empty_dynamic
             c.use_offset = False
             c.use_x = True
@@ -387,7 +311,7 @@ class Op_GYAZ_ExtractRootMotion_Manual (bpy.types.Operator):
             c.use_z = True
 
             #add Copy Rotation constraint to root, target: empty_dynamic
-            c = root.constraints.new (type = 'COPY_ROTATION')
+            c = root_pbone.constraints.new (type = 'COPY_ROTATION')
             c.target = empty_dynamic
             c.use_offset = False
             c.use_x = True
@@ -486,17 +410,23 @@ class Op_GYAZ_ExtractRootMotion_ManualBake (bpy.types.Operator):
         #get scene
         scene = bpy.context.scene
         driveBoneName = scene.gyaz_root_motion_drive_bone
+        rootBone_name = scene.gyaz_root_motion_root_bone
         #get first and last frame of animation
         firstFrame = scene.frame_start
         lastFrame = scene.frame_end
-        
-        bpy.ops.object.mode_set (mode='OBJECT')
+        bones = root.data.bones
             
         #jump to first frame of animation
         scene.frame_set (firstFrame)
         #bake action
-        bpy.ops.nla.bake(frame_start=firstFrame, frame_end=lastFrame, visual_keying=True, clear_constraints=False, clear_parents=True, use_current_action=True, bake_types={'POSE'})
-        bpy.ops.nla.bake(frame_start=firstFrame, frame_end=lastFrame, visual_keying=True, clear_constraints=True, clear_parents=True, use_current_action=True, bake_types={'OBJECT'})
+        deselect_all_bones(root)
+        bones[driveBoneName].select = True
+        bpy.ops.object.mode_set (mode='POSE')
+        bpy.ops.nla.bake(only_selected=True, frame_start=firstFrame, frame_end=lastFrame, visual_keying=True, clear_constraints=False, clear_parents=True, use_current_action=True, bake_types={'POSE'})
+        
+        deselect_all_bones(root)
+        bones[rootBone_name].select = True
+        bpy.ops.nla.bake(only_selected=True, frame_start=firstFrame, frame_end=lastFrame, visual_keying=True, clear_constraints=True, clear_parents=True, use_current_action=True, bake_types={'POSE'})
         
         constraints = bpy.context.object.pose.bones[driveBoneName].constraints
         
@@ -523,6 +453,7 @@ class Op_GYAZ_ExtractRootMotion_ManualBake (bpy.types.Operator):
         del root['ExtractRootMotion_manual_empty2']
         del root['ExtractRootMotion_manual_empty3']
 
+        bpy.ops.object.mode_set (mode='OBJECT')
         
         #end of operator
         return {'FINISHED'}
@@ -604,15 +535,6 @@ class Op_GYAZ_ExtractRootMotion_DeleteRootMotion (bpy.types.Operator):
     
     #operator function
     def execute(self, context):
-
-        #get scene
-        scene = bpy.context.scene
-        #get first and last frame of animation
-        firstFrame = scene.frame_start
-        lastFrame = scene.frame_end
-            
-        #jump to first frame of animation
-        scene.frame_set (firstFrame)
         
         #delete anim data
         root = bpy.context.active_object
@@ -620,6 +542,8 @@ class Op_GYAZ_ExtractRootMotion_DeleteRootMotion (bpy.types.Operator):
         bpy.ops.object.select_all (action='DESELECT')
         root.select_set (True)
         bpy.context.view_layer.objects.active = root
+        scene = bpy.context.scene
+        rootBone_name = scene.gyaz_root_motion_root_bone
                              
         #delete keys
         #get active action's name
@@ -638,39 +562,31 @@ class Op_GYAZ_ExtractRootMotion_DeleteRootMotion (bpy.types.Operator):
         action = bpy.data.actions[action_name]
         fcurves = action.fcurves
         for fc in fcurves:
-            if "bone" not in fc.data_path:
+            p = fc.data_path
+            print(p)
+            if "bone" not in p or p.startswith('pose.bones["' + rootBone_name + '"]'):
                 fcurves.remove (fc)
             
         bpy.ops.object.location_clear ()
         bpy.ops.object.rotation_clear ()  
-
         
         #end of operator
         return {'FINISHED'}
 
 
 #EXTRACT ROOT MOTION: ROOT BONE
-class Op_GYAZ_ExtractRootMotion_CopyToBone (bpy.types.Operator):
+class Op_GYAZ_ExtractRootMotion_CopyObjectAnimToBone (bpy.types.Operator):
        
     bl_idname = "anim.gyaz_extract_root_copy_to_bone"  
-    bl_label = "Extract Root Motion: Copy To Bone"
+    bl_label = "Extract Root Motion: Copy Object Anim To Bone"
     bl_description = "Moves extracted root motion from armature object to root bone. Root bone should be on a visible armature layer"
     bl_options = {'REGISTER', 'UNDO'}
-    
-    ui_root_bone: StringProperty(
-            name="Root",
-            default=prefs.root_bone
-            )
-    
-    #popup with properties
-    def invoke(self, context, event):
-        wm = bpy.context.window_manager
-        return wm.invoke_props_dialog(self)
     
     #operator function
     def execute(self, context):
         
-        root_bone_name = self.ui_root_bone
+        scene = bpy.context.scene
+        root_bone_name = scene.gyaz_root_motion_root_bone
         
         def main (root_bone_name):
             
@@ -760,12 +676,13 @@ class VIEW3D_PT_GYAZ_ExtractRootMotion (Panel):
     
     #add ui elements here
     def draw (self, context):
-        scene = bpy.context.scene
         lay = self.layout   
         
         col = lay.column(align=True)
-        col.label(text="Drive Bone:")
+        col.label(text="Hips Bone:")
         col.prop(bpy.context.scene, "gyaz_root_motion_drive_bone", text="")
+        col.label(text="Root Bone:")
+        col.prop(bpy.context.scene, "gyaz_root_motion_root_bone", text="")
         
         col = lay.column(align=True)
         col.label(text="Extract:")
@@ -776,10 +693,8 @@ class VIEW3D_PT_GYAZ_ExtractRootMotion (Panel):
         
         col = lay.column(align=True)
         row = col.row(align=True)
-        row.operator (Op_GYAZ_ExtractRootMotion_Visualize.bl_idname, text = "Visualize").remove = False
-        row.operator (Op_GYAZ_ExtractRootMotion_Visualize.bl_idname, text = "Remove").remove = True
         col.operator(Op_GYAZ_ExtractRootMotion_DeleteRootMotion.bl_idname, text="Delete Root Motion")
-        col.operator (Op_GYAZ_ExtractRootMotion_CopyToBone.bl_idname, text = "Move to Root Bone")
+        col.operator (Op_GYAZ_ExtractRootMotion_CopyObjectAnimToBone.bl_idname, text = "Object Anim to Bone")
     
     #when the buttons should show up    
     @classmethod
@@ -798,28 +713,31 @@ def register():
         default=prefs.drive_bone,
         description="Bone that moves the whole skeleton, e.g. hips or pelvis")
     
-    bpy.utils.register_class (Op_GYAZ_ExtractRootMotion_Visualize) 
+    Scene.gyaz_root_motion_root_bone = StringProperty(
+        name="Root Bone", 
+        default=prefs.root_bone)
+    
     bpy.utils.register_class (Op_GYAZ_ExtractRootMotion_Manual)
     bpy.utils.register_class (Op_GYAZ_ExtractRootMotion_ManualCancel)
     bpy.utils.register_class (Op_GYAZ_ExtractRootMotion_ManualBake)
     bpy.utils.register_class (Op_GYAZ_ExtractRootMotion_DeleteRootMotion)
-    bpy.utils.register_class (Op_GYAZ_ExtractRootMotion_CopyToBone)
+    bpy.utils.register_class (Op_GYAZ_ExtractRootMotion_CopyObjectAnimToBone)
     
     bpy.utils.register_class (VIEW3D_PT_GYAZ_ExtractRootMotion)
     
 
 def unregister ():
         
-    bpy.utils.unregister_class (Op_GYAZ_ExtractRootMotion_Visualize) 
     bpy.utils.unregister_class (Op_GYAZ_ExtractRootMotion_Manual)
     bpy.utils.unregister_class (Op_GYAZ_ExtractRootMotion_ManualCancel)
     bpy.utils.unregister_class (Op_GYAZ_ExtractRootMotion_ManualBake)
     bpy.utils.unregister_class (Op_GYAZ_ExtractRootMotion_DeleteRootMotion)
-    bpy.utils.unregister_class (Op_GYAZ_ExtractRootMotion_CopyToBone) 
+    bpy.utils.unregister_class (Op_GYAZ_ExtractRootMotion_CopyObjectAnimToBone)
     
     bpy.utils.unregister_class (VIEW3D_PT_GYAZ_ExtractRootMotion) 
     
-    del Scene.drive_bone
+    del Scene.gyaz_root_motion_drive_bone
+    del Scene.gyaz_root_motion_root_bone
   
 if __name__ == "__main__":   
     register()      

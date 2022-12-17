@@ -150,3 +150,8 @@ def get_all_descendant_bone_names(bone):
     list = []
     _get_descendants(bone, list)
     return list
+
+
+def deselect_all_bones(rig):
+    for bone in rig.data.bones:
+        bone.select = False
