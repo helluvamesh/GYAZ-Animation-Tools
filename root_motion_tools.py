@@ -679,10 +679,10 @@ class VIEW3D_PT_GYAZ_ExtractRootMotion (Panel):
         lay = self.layout   
         
         col = lay.column(align=True)
-        col.label(text="Hips Bone:")
-        col.prop(bpy.context.scene, "gyaz_root_motion_drive_bone", text="")
-        col.label(text="Root Bone:")
-        col.prop(bpy.context.scene, "gyaz_root_motion_root_bone", text="")
+        col.use_property_split = True
+        col.use_property_decorate = False
+        col.prop(bpy.context.scene, "gyaz_root_motion_drive_bone", text="Hips Bone")
+        col.prop(bpy.context.scene, "gyaz_root_motion_root_bone", text="Root Bone")
         
         col = lay.column(align=True)
         col.label(text="Extract:")
