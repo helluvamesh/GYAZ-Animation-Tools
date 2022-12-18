@@ -131,15 +131,6 @@ class GYAZ_AnimationTools_Preferences (AddonPreferences):
     preset_17: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
     preset_18: CollectionProperty(type=GYAZ_ReduceRig_PresetItem) 
     preset_19: CollectionProperty(type=GYAZ_ReduceRig_PresetItem)
-    
-    # RETARGET POSE
-    location_bones: StringProperty (default='hips', name='Location Bones', description='e.g.: hips, some_other_bone')
-    halve_frame_rate: BoolProperty (default=False, name='Halve Frame Rate')
-    override_frame_rate: IntProperty (default=30, name='Override Frame Rate', description="ignored if 'Halve Frame Rate' is False")
-    bake: BoolProperty (default=True, name='Bake', description='Bake action to target rig. Forced if Halve Frame Rate is True')
-    use_target_bone_prefix: BoolProperty (default=False, name='Use Target Bone Prefix')
-    target_bone_prefix: StringProperty (default='', name="Target Bone Prefix")
-    correct_loc_keys: BoolProperty (default=False, name="Correct Location Keys")
                           
     def draw(self, context):
         lay = self.layout
@@ -166,14 +157,6 @@ class GYAZ_AnimationTools_Preferences (AddonPreferences):
         lay.label (text="Retarget Animation:")
         lay.label (text="Modes: Object")
         lay.label (text="Location: View3d>Properies(N)Panel>AnimTools>Animation>Retarget")
-        lay.label (text="Settings:")
-        lay.prop (self, 'location_bones')
-        lay.prop (self, 'halve_frame_rate')
-        lay.prop (self, 'override_frame_rate')
-        lay.prop (self, 'bake')
-        lay.prop (self, 'use_target_bone_prefix')
-        lay.prop (self, 'target_bone_prefix')
-        lay.prop (self, 'correct_loc_keys')
         lay.label (text='')
         lay.label (text='Setup IK Constraint:')
         lay.label (text='Location: Properties Editor > Data > Setup IK Constraint')
