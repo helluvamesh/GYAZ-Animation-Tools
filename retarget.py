@@ -263,25 +263,6 @@ class Op_GYAZ_RetargetAnimation (bpy.types.Operator):
                                               
         return {'FINISHED'}
 
-
-class VIEW3D_PT_GYAZ_Animation (Panel):
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Animation'
-    bl_label = 'Animation'    
-    
-    #add ui elements here
-    def draw (self, context):
-        lay = self.layout
-        col = lay.column (align=True)
-        col.operator ('nla.bake')
-        col.operator ('anim.gyaz_retarget', text='Retarget')
-
-    #when the buttons should show up    
-    @classmethod
-    def poll(cls, context):
-        return bpy.context.object is not None and (bpy.context.mode == 'OBJECT' or bpy.context.mode == 'POSE')
-
     
 #######################################################
 #######################################################
@@ -289,13 +270,11 @@ class VIEW3D_PT_GYAZ_Animation (Panel):
 #REGISTER
 
 def register():
-    bpy.utils.register_class (Op_GYAZ_RetargetAnimation)  
-    bpy.utils.register_class (VIEW3D_PT_GYAZ_Animation)                                                     
+    bpy.utils.register_class (Op_GYAZ_RetargetAnimation)                                                      
    
 
 def unregister ():
     bpy.utils.unregister_class (Op_GYAZ_RetargetAnimation)
-    bpy.utils.unregister_class (VIEW3D_PT_GYAZ_Animation)
 
   
 if __name__ == "__main__":   

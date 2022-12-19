@@ -185,7 +185,7 @@ def unregister():
 register()
 
  
-modulesNames = ['offset_animation', 'root_motion_tools', 'retarget', 'weight_paint', 'rigging', 'rig_reducer', 'menus', 'shortcuts']
+modulesNames = ['animation', 'offset_animation', 'root_motion_tools', 'retarget', 'weight_paint', 'rigging', 'rig_reducer', 'menus', 'shortcuts']
  
 import sys
 import importlib
