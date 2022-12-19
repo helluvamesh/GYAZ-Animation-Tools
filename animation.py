@@ -60,6 +60,36 @@ class Op_GYAZ_ResetAllBones (Operator):
         obj = bpy.context.object
         return obj is not None and obj.type == "ARMATURE"
         
+
+class Op_GYAZ_AdjustSceneToActionFrameRange (Operator):
+       
+    bl_idname = "anim.adjust_scene_to_action_frame_range"  
+    bl_label = "Adjust Scene to Action Frame Range"
+    bl_description = ""
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    #operator function
+    def execute(self, context):
+
+        obj = context.object
+        scene = context.scene
+        if obj.animation_data is not None:
+            action = obj.animation_data.action
+            if action is not None:
+                frame_start, frame_end = action.frame_range
+                scene.frame_start = int(frame_start)
+                scene.frame_end = int(frame_end)
+                scene.frame_preview_start = int(frame_start)
+                scene.frame_preview_end = int(frame_end)
+
+        return {'FINISHED'}
+    
+    #when the buttons should show up    
+    @classmethod
+    def poll(cls, context):
+        obj = bpy.context.object
+        return obj is not None and obj.type == "ARMATURE"
+
     
 #######################################################
 #######################################################
@@ -69,11 +99,13 @@ class Op_GYAZ_ResetAllBones (Operator):
 def register():
        
     bpy.utils.register_class (Op_GYAZ_ResetAllBones) 
+    bpy.utils.register_class (Op_GYAZ_AdjustSceneToActionFrameRange) 
 
 
 def unregister ():
     
     bpy.utils.unregister_class (Op_GYAZ_ResetAllBones)
+    bpy.utils.unregister_class (Op_GYAZ_AdjustSceneToActionFrameRange)
   
 
 if __name__ == "__main__":   

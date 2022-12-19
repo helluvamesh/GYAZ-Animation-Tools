@@ -247,6 +247,10 @@ class VIEW3D_PT_GYAZ_Animation (Panel):
     def poll(cls, context):
         return bpy.context.object is not None and (bpy.context.mode == 'OBJECT' or bpy.context.mode == 'POSE')
 
+
+def timeline_header_extension(self, context):
+    self.layout.operator("anim.adjust_scene_to_action_frame_range", text="", icon="ACTION")
+
         
 #######################################################
 #######################################################
@@ -261,7 +265,9 @@ def register():
     bpy.utils.register_class (GRAPH_MT_GYAZ_GraphEditor)    
     bpy.utils.register_class (VIEW3D_MT_GYAZ_WeightTools)    
     bpy.utils.register_class (VIEW3D_MT_GYAZ_AnimTools)      
-    bpy.utils.register_class (VIEW3D_PT_GYAZ_Animation)      
+    bpy.utils.register_class (VIEW3D_PT_GYAZ_Animation)   
+
+    bpy.types.DOPESHEET_HT_header.append(timeline_header_extension)   
 
 def unregister ():
     
@@ -272,6 +278,8 @@ def unregister ():
     bpy.utils.unregister_class (VIEW3D_MT_GYAZ_WeightTools)
     bpy.utils.unregister_class (VIEW3D_MT_GYAZ_AnimTools)
     bpy.utils.unregister_class (VIEW3D_PT_GYAZ_Animation)
+
+    bpy.types.DOPESHEET_HT_header.remove(timeline_header_extension)  
   
 if __name__ == "__main__":   
     register()      
