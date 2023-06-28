@@ -18,7 +18,7 @@
 
 bl_info = {   
  "name": "GYAZ Animation Tools",   
- "author": "Andras Gyalog",   
+ "author": "helluvamesh",   
  "version": (3, 4, 0),   
  "blender": (3, 4, 0),   
  "location": "",   
