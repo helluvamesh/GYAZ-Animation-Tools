@@ -19,8 +19,8 @@
 bl_info = {   
  "name": "GYAZ Animation Tools",   
  "author": "helluvamesh",   
- "version": (3, 4, 0),   
- "blender": (3, 4, 0),   
+ "version": (4, 2, 0),   
+ "blender": (4, 2, 0),   
  "location": "",   
  "description": "Various animation tools",
  "warning": "",   

@@ -21,17 +21,16 @@
 ##########################################################################################################
 
 import bpy
-from bpy.types import Operator, Panel
+from bpy.types import Operator
 from bpy.props import *
 from .utils import report
 from .utils import popup
-from .utils import list_to_visual_list
 
 
 prefs = bpy.context.preferences.addons[__package__].preferences
 
 
-class Op_GYAZ_RetargetAnimation (bpy.types.Operator):
+class Op_GYAZ_RetargetAnimation (Operator):
        
     bl_idname = "anim.gyaz_retarget"  
     bl_label = "Retarget Animation"

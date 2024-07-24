@@ -28,7 +28,7 @@ from bpy.props import StringProperty, PointerProperty
 
 class Op_GYAZ_SetupIKConstraint_GetActiveBone (Operator):
        
-    bl_idname = "pose.setup_ik_constraint_get_active_bone"  
+    bl_idname = "pose.gyaz_setup_ik_constraint_get_active_bone"  
     bl_label = "Set Active Bone As"
     bl_description = "Set active pose bone (in pose mode)"
     
@@ -49,7 +49,7 @@ class Op_GYAZ_SetupIKConstraint_GetActiveBone (Operator):
     
 class Op_GYAZ_SetupIKConstraint (Operator):
        
-    bl_idname = "pose.setup_ik_constraint"  
+    bl_idname = "pose.gyaz_setup_ik_constraint"  
     bl_label = "Setup IK Constraint"
     bl_description = "Add an IK constraint to the constraint bone with all the settings done"
     bl_options = {'REGISTER', 'UNDO'}
@@ -146,7 +146,7 @@ class PG_GYAZ_SetupIKConstraint (PropertyGroup):
 
 class Op_GYAZ_AdjustActiveArmatureToSelected (Operator):
        
-    bl_idname = "object.adjust_active_armature_to_selected"  
+    bl_idname = "object.gyaz_adjust_active_armature_to_selected"  
     bl_label = "Adjust Armature"
     bl_description = "Adjust Active Armature to Selected"
     bl_options = {'REGISTER', 'UNDO'}
@@ -157,6 +157,7 @@ class Op_GYAZ_AdjustActiveArmatureToSelected (Operator):
         sel_objs = bpy.context.selected_objects
         if len(sel_objs) != 2:
             report(self, "Select two armatures", "WARNING")
+            return {'FINISHED'}
         
         to_rig = bpy.context.active_object
         from_rig = None

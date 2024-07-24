@@ -23,22 +23,12 @@
 import bpy
 from bpy.types import Panel, Operator, Scene, PropertyGroup, Menu
 from bpy.props import *
-import os
-import mathutils
 from mathutils import Vector, Quaternion
 from .utils import report
-from .utils import popup
 from .utils import lerp
 from .utils import smooth_lerp
 from .utils import ease_in_lerp
 from .utils import ease_out_lerp
-from .utils import signed_angle
-from .utils import get_pole_angle
-from .utils import set_end_mode
-from .utils import area_of_type
-from .utils import areas_of_type
-from .utils import set_properties_context 
-from .utils import list_to_visual_list
 
 
 
@@ -58,7 +48,7 @@ def check (self):
 #OPERATORS
 
 #OFFSET ANIMATION: GLOBAL
-class Op_GYAZ_OffsetAnim (bpy.types.Operator):
+class Op_GYAZ_OffsetAnim (Operator):
        
     bl_idname = "anim.gyaz_offset_anim"  
     bl_label = "Offset Anim"
@@ -88,13 +78,13 @@ class Op_GYAZ_OffsetAnim (bpy.types.Operator):
             #scene properties:
             
             # Assign a collection
-            class VectorPropertyItem(bpy.types.PropertyGroup):
-                value: bpy.props.FloatVectorProperty()
+            class VectorPropertyItem(PropertyGroup):
+                value: FloatVectorProperty()
 
             bpy.utils.register_class(VectorPropertyItem)
             
-            class QuaternionPropertyItem(bpy.types.PropertyGroup):
-                value: bpy.props.FloatVectorProperty(size=4)
+            class QuaternionPropertyItem(PropertyGroup):
+                value: FloatVectorProperty(size=4)
 
             bpy.utils.register_class(QuaternionPropertyItem)
             
@@ -467,7 +457,7 @@ class Op_GYAZ_OffsetAnim (bpy.types.Operator):
     
     
 #SAMPLE FCURVES
-class Op_GYAZ_AnimSampleFcurves (bpy.types.Operator):
+class Op_GYAZ_AnimSampleFcurves (Operator):
        
     bl_idname = "anim.gyaz_sample_fcurves"  
     bl_label = "Sample Fcurves"
@@ -518,7 +508,7 @@ class Op_GYAZ_AnimSampleFcurves (bpy.types.Operator):
         
 
 #DELETE FCURVES
-class Op_GYAZ_DeleteTimelineMarkers (bpy.types.Operator):
+class Op_GYAZ_DeleteTimelineMarkers (Operator):
        
     bl_idname = "anim.gyaz_delete_timeline_markers"  
     bl_label = "Delete Timeline Markers"

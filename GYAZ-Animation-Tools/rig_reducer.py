@@ -21,10 +21,9 @@
 ##########################################################################################################
 
 import bpy
-from bpy.types import Panel, Operator
+from bpy.types import Panel, Operator, PropertyGroup
 from bpy.props import *
 from .utils import report
-from .utils import popup
 from .utils import select_only
 from .utils import get_all_descendant_bone_names
 
@@ -33,12 +32,12 @@ prefs = bpy.context.preferences.addons[__package__].preferences
 
 # props
 
-class GYAZ_ReduceRig_BoneItem (bpy.types.PropertyGroup):
+class GYAZ_ReduceRig_BoneItem (PropertyGroup):
     name: StringProperty (name='', description="'Bone to remove' / 'Vertex group to merge and remove'")
     name_children_only: BoolProperty (name='', default=False, description="Children only: only look for children, leave this bone and vertex group alone")
     merge_to: StringProperty (name='', description="Vertex group to merge to. Leave it unset for just removing bone and vertex group")
   
-class GYAZ_ReduceRig_Props (bpy.types.PropertyGroup):
+class GYAZ_ReduceRig_Props (PropertyGroup):
 
     def get_preset_names (self, context):
         names = []
@@ -72,7 +71,7 @@ class GYAZ_ReduceRig_Props (bpy.types.PropertyGroup):
     bones: CollectionProperty (type = GYAZ_ReduceRig_BoneItem)
     
 
-class Op_GYAZ_ReduceRig_SavePreset (bpy.types.Operator):
+class Op_GYAZ_ReduceRig_SavePreset (Operator):
        
     bl_idname = "object.gyaz_reduce_rig_save_preset"  
     bl_label = "GYAZ Reduce Rig: Save Preset"
@@ -119,7 +118,7 @@ class Op_GYAZ_ReduceRig_SavePreset (bpy.types.Operator):
         return {'FINISHED'}
     
 
-class Op_GYAZ_ReduceRig_ClearPreset (bpy.types.Operator):
+class Op_GYAZ_ReduceRig_ClearPreset (Operator):
        
     bl_idname = "object.gyaz_reduce_rig_clear_preset"  
     bl_label = "GYAZ Reduce Rig: Clear Preset"
@@ -151,7 +150,7 @@ class Op_GYAZ_ReduceRig_ClearPreset (bpy.types.Operator):
         return {'FINISHED'}
 
 
-class Op_GYAZ_ReduceRig_Functions (bpy.types.Operator):
+class Op_GYAZ_ReduceRig_Functions (Operator):
        
     bl_idname = "object.gyaz_reduce_rig_functions"  
     bl_label = "GYAZ Reduce Rig: Functions"
@@ -180,7 +179,7 @@ class Op_GYAZ_ReduceRig_Functions (bpy.types.Operator):
         return {'FINISHED'}
         
     
-class Op_GYAZ_ReduceRig_RemoveItem (bpy.types.Operator):
+class Op_GYAZ_ReduceRig_RemoveItem (Operator):
        
     bl_idname = "object.gyaz_reduce_rig_remove_item"  
     bl_label = "GYAZ Reduce Rig: Remove Item"
@@ -198,7 +197,7 @@ class Op_GYAZ_ReduceRig_RemoveItem (bpy.types.Operator):
         return {'FINISHED'}
 
 
-class Op_GYAZ_ReduceRig_SetNameAsActiveBone (bpy.types.Operator):
+class Op_GYAZ_ReduceRig_SetNameAsActiveBone (Operator):
        
     bl_idname = "object.gyaz_reduce_rig_set_prop_as_active_bone"  
     bl_label = "GYAZ Reduce Rig: Set Prop As Active Bone"
@@ -217,7 +216,7 @@ class Op_GYAZ_ReduceRig_SetNameAsActiveBone (bpy.types.Operator):
         return {'FINISHED'}
 
     
-class Op_GYAZ_ReduceRig_SetMergeToAsActiveBone (bpy.types.Operator):
+class Op_GYAZ_ReduceRig_SetMergeToAsActiveBone (Operator):
        
     bl_idname = "object.gyaz_reduce_rig_set_merge_to_as_active_bone"  
     bl_label = "GYAZ Reduce Rig: Set Merge To As Active Bone"
@@ -236,7 +235,7 @@ class Op_GYAZ_ReduceRig_SetMergeToAsActiveBone (bpy.types.Operator):
         return {'FINISHED'}
     
     
-class Op_GYAZ_ReduceRig_MergeWeightsAndRemoveBones (bpy.types.Operator):
+class Op_GYAZ_ReduceRig_MergeWeightsAndRemoveBones (Operator):
        
     bl_idname = "object.gyaz_reduce_rig_merge_weights_and_remove_bones"  
     bl_label = "GYAZ Reduce Rig: Merge Weights And Remove Bones"

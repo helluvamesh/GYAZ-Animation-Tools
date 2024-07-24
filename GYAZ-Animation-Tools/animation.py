@@ -63,7 +63,7 @@ class Op_GYAZ_ResetAllBones (Operator):
 
 class Op_GYAZ_AdjustSceneToActionFrameRange (Operator):
        
-    bl_idname = "anim.adjust_scene_to_action_frame_range"  
+    bl_idname = "anim.gyaz_adjust_scene_to_action_frame_range"  
     bl_label = "Adjust Scene to Action Frame Range"
     bl_description = ""
     bl_options = {'REGISTER', 'UNDO'}

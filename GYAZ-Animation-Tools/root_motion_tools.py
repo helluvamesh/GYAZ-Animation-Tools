@@ -23,7 +23,6 @@
 
 import bpy
 from .utils import popup_lines as popup
-from .utils import popup as popup_single
 from .utils import select_only
 from .utils import deselect_all_bones
 from bpy.types import Scene

@@ -43,66 +43,37 @@ def activate_shortcuts():
     for km in wm.keyconfigs.user.keymaps:
         if km.name == 'Pose': 
             for kmi in km.keymap_items:
-                if kmi.idname == 'wm.call_menu' and kmi.type=='W' and kmi.shift==False and kmi.ctrl==False and kmi.alt==False:
-                    if kmi.properties.name == 'VIEW3D_MT_pose_context_menu':
-                        kmi.active = False
-                        save_dis_shortcut (km, kmi)
-                        
-                elif kmi.idname == 'wm.call_menu' and kmi.type=='A' and kmi.shift==False and kmi.ctrl==True and kmi.alt==False:
-                    if kmi.properties.name == 'VIEW3D_MT_pose_apply':
-                        kmi.active = False
-                        save_dis_shortcut (km, kmi)
-                                                           
-                elif kmi.idname == 'wm.call_menu' and kmi.type=='W' and kmi.shift==True and kmi.ctrl==False and kmi.alt==False:
+                if kmi.idname == 'wm.call_menu' and kmi.type=='W' and kmi.shift==True and kmi.ctrl==False and kmi.alt==False:
                     if kmi.properties.name == 'VIEW3D_MT_bone_options_toggle':
                         kmi.active = False
                         save_dis_shortcut (km, kmi)
+
+        elif km.name == 'Weight Paint': 
+            for kmi in km.keymap_items:
+                if kmi.idname == 'wm.tool_set_by_id' and kmi.type=='W' and kmi.shift==False and kmi.ctrl==False and kmi.alt==False:
+                    kmi.active = False
+                    save_dis_shortcut (km, kmi)
     
     
     # add addon shortcuts
     for km in wm.keyconfigs.user.keymaps:            
 
-        # Object Mode
-        if km.name == 'Object Mode':
-            
-            kmi = km.keymap_items.new ('wm.call_menu', 'Q', 'PRESS')
-            kmi.properties.name = "VIEW3D_MT_GYAZ_AnimTools"
-            save_shortcut (km, kmi)
-            
         # Pose Mode
-        elif km.name == 'Pose':
-            
-            kmi = km.keymap_items.new ('wm.call_menu', 'Q', 'PRESS')
-            kmi.properties.name = "VIEW3D_MT_GYAZ_AnimTools"
-            save_shortcut (km, kmi)
+        if km.name == 'Pose':
             
             kmi = km.keymap_items.new ('wm.call_menu', 'W', 'PRESS')
             kmi.properties.name = "VIEW3D_MT_GYAZ_Pose"
             save_shortcut (km, kmi)
             
-            kmi = km.keymap_items.new ('wm.call_menu', 'E', 'PRESS')
-            kmi.properties.name = "VIEW3D_MT_GYAZ_Armature"
+            kmi = km.keymap_items.new ('wm.call_menu', 'D', 'PRESS', ctrl=True)
+            kmi.properties.name = "VIEW3D_MT_GYAZ_PoseSelect"
             save_shortcut (km, kmi)
-            
-        # Dopesheet
-        if km.name == 'Dopesheet':
-          
-            kmi = km.keymap_items.new ('wm.call_menu', 'W', 'PRESS')
-            kmi.properties.name = "VIEW3D_MT_GYAZ_Dopesheet"
-            save_shortcut (km, kmi)
-            
-        # Graoh Editor
-        if km.name == 'Graph Editor':
-          
-            kmi = km.keymap_items.new ('wm.call_menu', 'W', 'PRESS')
-            kmi.properties.name = "VIEW3D_MT_GYAZ_GraphEditor"
-            save_shortcut (km, kmi)
-            
+
         # Weight Paint Mode
         if km.name == 'Weight Paint':
           
-            kmi = km.keymap_items.new ('wm.call_menu', 'Q', 'PRESS')
-            kmi.properties.name = "VIEW3D_MT_GYAZ_WeightTools"
+            kmi = km.keymap_items.new ('wm.call_menu', 'W', 'PRESS')
+            kmi.properties.name = "VIEW3D_MT_paint_weight"
             save_shortcut (km, kmi)
                   
 
