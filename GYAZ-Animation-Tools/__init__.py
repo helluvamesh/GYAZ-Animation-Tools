@@ -19,7 +19,7 @@
 bl_info = {   
  "name": "GYAZ Animation Tools",   
  "author": "helluvamesh",   
- "version": (4, 2, 0),   
+ "version": (4, 2, 1),   
  "blender": (4, 2, 0),   
  "location": "",   
  "description": "Various animation tools",
@@ -31,7 +31,7 @@ bl_info = {
 
 
 import bpy
-from bpy.types import Operator, AddonPreferences, PropertyGroup
+from bpy.types import AddonPreferences, PropertyGroup
 from bpy.props import *
 
 
@@ -137,30 +137,27 @@ class GYAZ_AnimationTools_Preferences (AddonPreferences):
         lay.label (text='')
         lay.label (text="Offset Animation:")
         lay.label (text="Global or local smooth offset of multiple bones or active object.")
-        lay.label (text="Modes: Object, Pose")
-        lay.label (text="Location: View3d>Properies(N)Panel>AnimTools>Offset Animation")
-        lay.label (text="Menu Shortcut: F")
+        lay.label (text="Location: 3D View in Object/Pose mode > N Panel > Animation > Offset Animation")
         lay.label (text='')
         lay.label (text='Extract Root Motion:')
         lay.label (text="From the 'drive bone' of a full fk skeleton and apply it to Armature Object or root bone. The drive bone is at top of hierarchy, e.g. pelvis or hips. All bones should inherit rotation.")
-        lay.label (text="Modes: Object")
-        lay.label (text="Location: View3d>Properies(N)Panel>AnimTools>Extract Root Motion")
-        lay.label (text="Menu Shortcut: Q")
+        lay.label (text="Location: 3D View in Object mode > N Panel > Animation > Extract Root Motion")
         lay.prop (self, "drive_bone")
         lay.prop (self, "root_bone")
         lay.label (text='')
         lay.label (text="Rig Reducer:")
-        lay.label (text="For creating Levels of Detail (LODs) of armatures and bone weights.")
-        lay.label (text="Modes: Object, Pose")        
-        lay.label (text="Location: View3d>Properies(N)Panel>AnimTools>Reduce Rig")        
+        lay.label (text="For creating Levels of Detail (LODs) of armatures and bone weights.")       
+        lay.label (text="Location: 3D View in Object / Pose mode > N Panel > Animation > Reduce Rig")        
         lay.label (text='')
         lay.label (text="Retarget Animation:")
-        lay.label (text="Modes: Object")
-        lay.label (text="Location: View3d>Properies(N)Panel>AnimTools>Animation>Retarget")
+        lay.label (text="Location: 3D View in Object / Pose mode > N Panel > Animation > Retarget")
         lay.label (text='')
         lay.label (text='Setup IK Constraint:')
-        lay.label (text='Location: Properties Editor > Data > Setup IK Constraint')
+        lay.label (text='Location: 3D View in Object / Pose mode > N Panel > Animation > Setup IK Constraint')
         lay.label (text='')
+        lay.label (text='Pose menu: 3D View in Pose mode > W')
+        lay.label (text='Selection menu: 3D View in Pose mode > CTRL + D')
+        lay.label (text='Weight paint menu: 3D View in Weight Paint mode > W')
         lay.prop (self, 'shortcuts_active')
         lay.label (text='')
         
