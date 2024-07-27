@@ -158,6 +158,7 @@ class GYAZ_AnimationTools_Preferences (AddonPreferences):
         lay.label (text='Pose menu: 3D View in Pose mode > W')
         lay.label (text='Selection menu: 3D View in Pose mode > CTRL + D')
         lay.label (text='Weight paint menu: 3D View in Weight Paint mode > W')
+        lay.label (text='')
         lay.prop (self, 'shortcuts_active')
         lay.label (text='')
         
